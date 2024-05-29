@@ -28,7 +28,7 @@ public class JsonUtil {
     }
 
     /**
-     * Deserialize a list of object from the JSON file
+     * Deserialize a list of object from the JSON file.
      *
      * @param <T>      the type of object in the list
      * @param filePath the path of the source JSON file
