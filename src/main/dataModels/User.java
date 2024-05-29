@@ -1,10 +1,17 @@
-package main.data;
+package main.dataModels;
 
 public class User {
     private String username;
     private String password;
     private int reviews;
     private String badge;
+
+    public User(String username, String psw) {
+        this.username = username;
+        this.password = psw;
+        this.reviews = 0;
+        this.badge = null;
+    }
     
     /**
      * @return username parameters

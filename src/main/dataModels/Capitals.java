@@ -1,0 +1,23 @@
+enum Capitals {
+    AGRIGENTO,
+    CAMPOBASSO,
+    ANCONA,
+    AOSTA,
+    BARI,
+    BOLOGNA,
+    CAGLIARI,
+    CATANZARO,
+    FIRENZE,
+    GENOVA,
+    LAQUILA,
+    MILANO,
+    NAPOLI,
+    PALERMO,
+    PERUGIA,
+    POTENZA,
+    ROMA,
+    TORINO,
+    TRENTO,
+    TRIESTE,
+    VENEZIA;
+}

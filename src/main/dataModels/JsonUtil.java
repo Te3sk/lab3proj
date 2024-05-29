@@ -1,4 +1,4 @@
-package main.data;
+package main.dataModels;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
