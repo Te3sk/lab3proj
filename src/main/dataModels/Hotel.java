@@ -10,10 +10,10 @@ public class Hotel {
     private String city;
     private String phone;
     private List<String> services;
+    private int rank;
+    private List<Review> reviews;
     private double rate;
     private Map<String, Integer> ratings;
-    private int reviews;
-    private int rank;
 
     /**
     * @return id parameter
@@ -55,6 +55,13 @@ public class Hotel {
     */
     public List<String> getServices (){
         return this.services;
+    }
+
+    /**
+    * @services you want to set
+    */
+    public void setServices (List<String> services){
+        this.services = services;
     }
 
     /**
@@ -121,17 +128,33 @@ public class Hotel {
     }
 
     /**
-     * @return reviews parameter
+     * @return the list of reviews of this hotel
      */
-    public int getReviews() {
+    public List<Review> getReviews() {
         return this.reviews;
     }
 
     /**
-     * @param reviews you want to set
-     */
-    public void setReviews(int reviews) {
+    * @reviews you want to set
+    */
+    public void setReviews (List<Review> reviews){
         this.reviews = reviews;
+    }
+
+    /**
+     * add a review to the reviews list of this hotel
+     * 
+     * @param review the review you want to add
+     */
+    public void addReview (Review review) {
+        this.reviews.add(review);
+    }
+
+    /**
+     * @return the number of review of this hotel
+     */
+    public int getReviewsNumber() {
+        return reviews.size();
     }
 
     /**
@@ -146,5 +169,26 @@ public class Hotel {
      */
     public void setRank(int rank) {
         this.rank = rank;
+    }
+
+    /**
+     * @return a copy of this hotel
+     */
+    public Hotel copy()  {
+        // todo - DELETE ?????
+        Hotel clone = new Hotel();
+
+        clone.setId(this.id);
+        clone.setName(this.name);
+        clone.setDescription(this.description);
+        clone.setCity(this.city);
+        clone.setPhone(this.phone);
+        clone.setServices(this.services);
+        clone.setRank(this.rank);
+        clone.setReviews(this.reviews);
+        clone.setRate(this.rate);
+        clone.setRatings(this.ratings);
+
+        return clone;
     }
 }

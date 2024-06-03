@@ -3,6 +3,7 @@ package main.server;
 import java.net.Socket;
 
 import main.dataModels.JsonUtil;
+import main.dataModels.Capitals;
 
 import java.net.ServerSocket;
 import java.io.IOException;
