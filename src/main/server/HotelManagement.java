@@ -8,6 +8,8 @@ import java.util.Map;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
+import javax.xml.crypto.Data;
+
 import main.dataModels.Hotel;
 import main.dataModels.JsonUtil;
 import main.dataModels.Capitals;
@@ -19,29 +21,15 @@ public class HotelManagement {
     /** map as (key:hotel.id, value:Hotel) */
     private Map<String, Hotel> hotels;
 
+    private DataPersistence dataPersistence;
+
     /**
      * constructor
      */
     public HotelManagement(String hotelPath) {
         this.hotelPath = hotelPath;
-        this.loadHotels();
-    }
-
-    /**
-     * load the hotel infos from the JSON file
-     */
-    public void loadHotels() {
-        try {
-            this.hotels = new HashMap<>();
-            List<Hotel> temp = new ArrayList<Hotel>();
-            temp = JsonUtil.deserializeListFromFile(hotelPath, Hotel.class);
-            // insert each hotel in the map as (key:id, value:Hotel)
-            for (Hotel hotel : temp) {
-                this.hotels.put(hotel.getId(), hotel);
-            }
-        } catch (IOException e) {
-            System.out.println("Error loading hotels: " + e);
-        }
+        this.dataPersistence = new DataPersistence();
+        this.hotels = dataPersistence.loadHotels(hotelPath);
     }
 
     /**
