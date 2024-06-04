@@ -32,6 +32,7 @@ public class HotelManagement {
      */
     public void loadHotels() {
         try {
+            this.hotels = new HashMap<>();
             List<Hotel> temp = new ArrayList<Hotel>();
             temp = JsonUtil.deserializeListFromFile(hotelPath, Hotel.class);
             // insert each hotel in the map as (key:id, value:Hotel)
@@ -202,29 +203,75 @@ public class HotelManagement {
 
         // calculate weight for recency (for each city)
         for (String currentCity : hotelsByCity.keySet()) {
-            List<Hotel> cityHotels = hotelsByCity.get(city);
-            // max number of review of an hotel in that city (is 1 in case of the list is empty)
+            List<Hotel> cityHotels = hotelsByCity.get(currentCity);
+            // max number of review of an hotel in that city (is 1 in case of the list is
+            // empty)
             int maxReviewCount = cityHotels.stream().mapToInt(h -> h.getReviews().size()).max().orElse(1);
             double maxRecentWeight = 0.0;
 
             // calculate weights for recency
-            double weight = 0.0;
-            long currentTime = System.currentTimeMillis();
+
             for (Hotel hotel : cityHotels) {
                 for (Review review : hotel.getReviews()) {
-                    long reviewTime = review.getDate().getTime();
-                    long timeDifference = currentTime - reviewTime;
-                    // the factor decrease when the time elapsed since the review increases ((1000.0 * 60 * 60 * 24 * 30) converted time from millisecond to months)
-                    double recencyFactor = 1.0 / (1.0 + timeDifference / (1000.0 * 60 * 60 * 24 * 30));
-                    weight += recencyFactor;    
+                    double recentWeight = calculateRecentWeight(hotel);
+                    if (maxRecentWeight < recentWeight) {
+                        maxRecentWeight = recentWeight;
+                    }
                 }
             }
-        }
 
-        // update rank for each hotel
+            // compute rank value for each hotel
+            Map<String, Double> rankValues = new HashMap<String, Double>();
+            for (Hotel hotel : cityHotels) {
+                // get the average rate
+                double avgRate = hotel.getRate();
+                // get the number of review
+                int reviewCount = hotel.getReviewsNumber();
+                // get the recent weight
+                double recentWeight = calculateRecentWeight(hotel);
+                // todo - levare da qui e scrivere nella doc
+                // - avgRating è la valutazione media delle recensioni dell'hotel.
+                // - 5.0 è il massimo punteggio possibile per una recensione (assumendo una
+                // scala da 1 a 5).
+                // - reviewsCount è il numero totale di recensioni per l'hotel.
+                // - maxReviewsCount è il numero massimo di recensioni tra tutti gli hotel della
+                // stessa città.
+                // - recentWeight è il peso totale delle recensioni recenti per l'hotel,
+                // calcolato con il metodo calculateRecentWeight.
+                // - maxRecentWeight è il massimo peso delle recensioni recenti tra tutti gli
+                // hotel della stessa città.
+                //
+                // Ogni componente della formula è moltiplicata per un peso (0.5 per la qualità,
+                // 0.3 per la quantità, 0.2 per l'attualità) per dare l'importanza relativa
+                // desiderata a ciascun fattore nel calcolo del rank finale dell'hotel.
+                double rankValue = ((avgRate / 0.5) * 0.5) + ((reviewCount / maxReviewCount) / 0.3)
+                        + ((recentWeight / maxRecentWeight) * 0.2);
+                rankValues.put(hotel.getId(), rankValue);
+            }
+            
+            // sort by rank value
+            cityHotels.sort((hotel1, hotel2) -> {
+                Double rank1 = rankValues.get(hotel1.getId());
+                Double rank2 = rankValues.get(hotel2.getId());
+                return rank1.compareTo(rank2);
+            });
+            int i = 1;
+            for (Hotel hotel : cityHotels) {
+                this.hotels.get(hotel.getId()).setRank(i);
+                i++;
+            }
+
+        }
+        // todo - send notification to logged users
     }
 
-    public Map<String, List<Hotel>> groupByCity() {
+    /**
+     * take the Map<String, Hotel> hotels (attribute) and gruop them by city
+     * 
+     * @return a Map<String, List<Hotel>> associating a list of hotel with a city
+     *         (string)
+     */
+    private Map<String, List<Hotel>> groupByCity() {
         Map<String, List<Hotel>> hotelsByCity = new HashMap<>();
 
         for (Hotel h : this.hotels.values()) {
@@ -243,5 +290,20 @@ public class HotelManagement {
         }
 
         return hotelsByCity;
+    }
+
+    private double calculateRecentWeight(Hotel hotel) {
+        double weight = 0.0;
+        long currentTime = System.currentTimeMillis();
+        for (Review review : hotel.getReviews()) {
+            long reviewTime = review.getDate().getTime();
+            long timeDifference = currentTime - reviewTime;
+            // the factor decrease when the time elapsed since the review increases
+            // ((1000.0 * 60 * 60 * 24 * 30) converted time from millisecond to months)
+            double recencyFactor = 1.0 / (1.0 + timeDifference / (1000.0 * 60 * 60 * 24 * 30));
+            weight += recencyFactor;
+        }
+
+        return weight;
     }
 }

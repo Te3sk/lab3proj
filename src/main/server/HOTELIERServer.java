@@ -1,11 +1,19 @@
+// compile: javac -d bin -cp lib/*.jar src/main/dataModels/*.java src/main/server/*.java src/main/client/*.java
+// run: java -cp "bin;lib/*" main.server.HOTELIERServer
+// compile and run: javac -d bin -cp lib/*.jar src/main/dataModels/*.java src/main/server/*.java src/main/client/*.java && java -cp "bin;lib/*" main.server.HOTELIERServer
+
 package main.server;
 
 import java.net.Socket;
+import java.util.List;
 
+// import main.dataModels.JsonUtil;
 import main.dataModels.JsonUtil;
 import main.dataModels.Capitals;
+import main.dataModels.Hotel;
 
 import java.net.ServerSocket;
+import java.io.File;
 import java.io.IOException;
 
 public class HOTELIERServer implements Runnable {
@@ -13,6 +21,7 @@ public class HOTELIERServer implements Runnable {
     private boolean isRunning;
     private ServerSocket serverSocket;
     private UserManagement userManagement;
+    private HotelManagement hotelManagement;
 
     private static final String userPath = "../data/users.JSON";
     private static final String hotelPath = "../data/hotel.JSON";
@@ -31,7 +40,7 @@ public class HOTELIERServer implements Runnable {
     /**
      * start the server
      */
-    void start() {
+    public void start() {
         // todo - HOTELIERServer.start
         if (isRunning) {
             System.out.println("the server il already started");
@@ -64,7 +73,7 @@ public class HOTELIERServer implements Runnable {
         }
     }
 
-    void stop () {
+    public void stop () {
         isRunning = false;
         try{
             if (serverSocket != null) {
@@ -79,8 +88,25 @@ public class HOTELIERServer implements Runnable {
     /**
      * save user and hotel data in a JSON file
      */
-    void saveData(){
+    public void saveData(){
         // todo - HOTELIERServer.saveData
+    }
+
+    // todo - check and handle exception
+    public static void main(String[] args) throws Exception{
+        System.out.println("start execution...");
+        
+        // initializing hotel manager
+        HOTELIERServer HServer = new HOTELIERServer(0); 
+        HServer.initalizeHotel();
+        
+        // test      
+
+    }
+
+    private void initalizeHotel () {
+        this.hotelManagement = new HotelManagement("src/main/data/Hotels.json");
+        System.out.println("hotelManagement initialized...");
     }
 
     @Override
