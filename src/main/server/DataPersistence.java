@@ -17,44 +17,67 @@ public class DataPersistence {
      * constructor
      * todo
      */
-    public DataPersistence(){
+    public DataPersistence() {
         // todo - DataPersistence.constructor
     }
 
     /**
      * Save user datas in a JSON file
      * todo
+     * 
      * @param users
      * @param filePath
      */
     public void saveUsers(Map<String, User> users, String filePath) {
-        // todo - DataPersistence.saveUsers
+        try {
+            List<User> temp = new ArrayList<>(users.values());
+            JsonUtil.serializeListToFile(temp, filePath);
+        } catch (Exception e) {
+            System.out.println("Error during users save: " + e);
+        }
     }
 
     /**
      * save hotels datas in a JSON file
      * todo
+     * 
      * @param hotels
      * @param filePath
      */
     public void saveHotels(List<Hotel> hotels, String filePath) {
-        // todo - DataPersistence.saveHotels
+        try {
+            JsonUtil.serializeListToFile(hotels, filePath);
+        } catch (Exception e) {
+            System.out.println("Error during hotels saving: " + e);
+        }
     }
-    
+
     /**
      * load users datas from a JSON file
      * todo
+     * 
      * @param filePath
      * @return
      */
-    public Map<String, User> loadUsers(String filePath){
-        // todo - NotificationService.loadUsers
-        return new HashMap<>();
+    public Map<String, User> loadUsers(String filePath) {
+        try {
+            Map<String, User> users = new HashMap<String, User>();
+            List<User> temp = new ArrayList<User>();
+            temp = JsonUtil.deserializeListFromFile(filePath, User.class);
+            for (User user : temp) {
+                users.put(user.getUsername(), user);
+            }
+            return users;
+        } catch (Exception e) {
+            System.out.println("Error during users load: " + e);
+            return null;
+        }
     }
 
     /**
      * load hotels datas from a JSON file
      * todo
+     * 
      * @param filePath
      * @return
      */

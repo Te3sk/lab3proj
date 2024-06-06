@@ -81,6 +81,13 @@ public class HotelManagement {
     }
 
     /**
+    * @return hotels parameter
+    */
+    public Map<String, Hotel> getHotels() {
+        return hotels;
+    }
+
+    /**
      * add a review for an hotel
      * 
      * @param nomeHotel name of the hotel
@@ -252,6 +259,26 @@ public class HotelManagement {
         }
         // todo - send notification to logged users
     }
+
+    /**
+     * @return a map <key:city, value:hotelId> that associated a city with the most high rank hotel
+     */
+    public Map<String, String> firstLocalHotels() {
+        // this list will contain all the first local Hotel ids 
+        Map<String, String> hotelsId = new HashMap<String, String>();
+        Map<String, List<Hotel>> hotelByCity = this.groupByCity();
+        for (String city : hotelByCity.keySet()) {
+            List<Hotel> cityHotels = hotelByCity.get(city);
+            for (Hotel hotel : cityHotels) {
+                if (hotel.getRank() == 1) {
+                    hotelsId.put(city, hotel.getId());
+                    break;
+                }
+            }
+        }
+
+        return hotelsId;
+    } 
 
     /**
      * take the Map<String, Hotel> hotels (attribute) and gruop them by city

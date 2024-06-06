@@ -90,6 +90,8 @@ public class HOTELIERServer implements Runnable {
      */
     public void saveData(){
         // todo - HOTELIERServer.saveData
+        // save users
+        // save hotels
     }
 
     // todo - check and handle exception
