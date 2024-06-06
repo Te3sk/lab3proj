@@ -14,8 +14,7 @@ public class DataPersistence {
     // todo - attributes
 
     /**
-     * constructor
-     * todo
+     * constructor for a DataPersistent obj
      */
     public DataPersistence() {
         // todo - DataPersistence.constructor
@@ -23,10 +22,9 @@ public class DataPersistence {
 
     /**
      * Save user datas in a JSON file
-     * todo
      * 
-     * @param users
-     * @param filePath
+     * @param users the datas in this format (used in UserManagement)
+     * @param filePath the path of the JSON file where you want to save the datas
      */
     public void saveUsers(Map<String, User> users, String filePath) {
         try {
@@ -39,10 +37,9 @@ public class DataPersistence {
 
     /**
      * save hotels datas in a JSON file
-     * todo
      * 
-     * @param hotels
-     * @param filePath
+     * @param hotels the datas in this format (used in HotelManagement)
+     * @param filePath the path of the JSON file where you want to save the datas
      */
     public void saveHotels(List<Hotel> hotels, String filePath) {
         try {
@@ -54,10 +51,9 @@ public class DataPersistence {
 
     /**
      * load users datas from a JSON file
-     * todo
      * 
-     * @param filePath
-     * @return
+     * @param filePath the path of the JSON file where you want to load the datas
+     * @return a mapping <username, user> with all the datas (same format of UserManagement) 
      */
     public Map<String, User> loadUsers(String filePath) {
         try {
@@ -76,13 +72,12 @@ public class DataPersistence {
 
     /**
      * load hotels datas from a JSON file
-     * todo
      * 
-     * @param filePath
-     * @return
+     * 
+     * @param filePath the path of the JSON file where you want to load the datas
+     * @return a mapping <hotelId, hotel> with all the datas (same format of HotelManagement) 
      */
     public Map<String, Hotel> loadHotels(String filePath) {
-        // todo - NotificationService.loadHotels
         try {
             Map<String, Hotel> hotels = new HashMap<String, Hotel>();
             List<Hotel> temp = new ArrayList<Hotel>();
