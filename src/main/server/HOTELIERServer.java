@@ -12,6 +12,7 @@ import main.dataModels.JsonUtil;
 import main.dataModels.Capitals;
 import main.dataModels.Hotel;
 
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.io.File;
 import java.io.IOException;
@@ -26,6 +27,9 @@ public class HOTELIERServer implements Runnable {
     private static final String userPath = "../data/users.JSON";
     private static final String hotelPath = "../data/hotel.JSON";
     // private HotelManagement hotelManagement;
+
+    // public Server (InetAddress tcpAddr, InetAddress udpAddr, int tcpPort, long interval, int broadcastPort,
+    //         String hotelFile, String userFile) {
 
     /**
      * HOTELIERServer class constructor
