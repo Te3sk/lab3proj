@@ -1,14 +1,9 @@
 package main.server;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import main.dataModels.JsonUtil;
 import main.dataModels.User;
 
 public class UserManagement {
@@ -18,6 +13,7 @@ public class UserManagement {
     private String dataFilePath;
     /** set of users (by username) that are actually logged in */
     private Set<String> loggedInUsers;
+    private DataPersistence dataPersistence;
 
     /**
      * constructor
@@ -26,18 +22,9 @@ public class UserManagement {
      */
     public UserManagement(String dataFilePath) {
         this.dataFilePath = dataFilePath;
-        this.users = new HashMap<String, User>();
+        this.dataPersistence = new DataPersistence();
+        this.users = this.dataPersistence.loadUsers(dataFilePath);       
         this.loggedInUsers = new HashSet<>();
-
-        try {
-            List<User> temp = new ArrayList<User>();
-            temp = JsonUtil.deserializeListFromFile(this.dataFilePath, User.class);
-            for (User users : temp) {
-                this.users.put(users.getUsername(), users);
-            }
-        } catch (IOException e) {
-            System.out.println("Errore nella deserializzazione: " + e);
-        }
     }
 
     /**
@@ -45,26 +32,23 @@ public class UserManagement {
      * 
      * @param username
      * @param psw
-     * @return a fail or success message (String)
-     * @throws Exception
+     * @throws Exceptions if empty fields or existing username
      */
-    public synchronized String register(String username, String psw) {
+    public synchronized void register(String username, String psw) throws Exception {
         // check if username and psw is empty
         if (username == null || username.isEmpty() || psw == null || psw.isEmpty()) {
-            return "Register error: username and password cannot be empty";
+            throw new Exception("Register error: username and password cannot be empty");
         }
         // check if the username already exists
         for (String usrnm : this.users.keySet()) {
             if (username.equals(usrnm)) {
-                return "Register error: username already exists";
+                throw new Exception("Register error: username already exists");
             }
         }
 
         // save new user datas
         User newUser = new User(username, psw);
         this.users.put(newUser.getUsername(), newUser);
-
-        return "Registration successfull";
     }
 
     /**
@@ -74,26 +58,26 @@ public class UserManagement {
      * @param psw
      * @return a fail or success message (String)
      */
-    public synchronized String login(String username, String psw) {
+    public synchronized void login(String username, String psw) throws Exception {
         // check if username or psw are empty
         if (username == null || username.isEmpty() || psw == null || psw.isEmpty()) {
-            return "Login error: username and password cannot be empty";
+            throw new Exception("Login error: username and password cannot be empty");
         }
 
         // check if username exists
         User user = this.users.get(username);
 
         if (user == null) {
-            return "Username not found.";
+            throw new Exception("Username not found.");
         }
 
         // check if psw match with the User
         if (!user.getPassword().equals(psw)){
-            return "Incorrect psw.";
+            throw new Exception("Incorrect psw.");
         }
 
         this.loggedInUsers.add(username);
-        return "Login successfull.";
+        throw new Exception("Login successfull.");
     }
 
     /**
@@ -109,5 +93,12 @@ public class UserManagement {
 
         loggedInUsers.remove(username);
         return "Logout successfull";
+    }
+
+    /**
+     * save users to JSON file
+     */
+    public void saveUsers(){
+        dataPersistence.saveUsers(users, this.dataFilePath);
     }
 }

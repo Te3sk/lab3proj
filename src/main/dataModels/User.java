@@ -4,13 +4,13 @@ public class User {
     private String username;
     private String password;
     private int reviews;
-    private String badge;
+    private int points;
 
     public User(String username, String psw) {
         this.username = username;
         this.password = psw;
         this.reviews = 0;
-        this.badge = null;
+        this.points = 0;
     }
     
     /**
@@ -59,6 +59,15 @@ public class User {
     * @return badge parameter
     */
     public String getBadge (){
-        return this.badge;
+        // todo - understand level stuff
+        if (this.points == 0) return "TO_UNLOCK";
+        else if (this.points <= 10) return "LEVEL_1";
+        else if (this.points <= 20) return "LEVEL_2";
+        else if (this.points <= 30) return "LEVEL_3";
+        else if (this.points <= 40) return "LEVEL_4";
+        else return "LEVEL_EXPERT";
     }
+
+    /** increments experience points of this user */
+    public void updatePoints() {this.points++;}
 }

@@ -68,4 +68,9 @@ public class NotificationService extends TimerTask{
             System.out.println("Error during notification service: " + e);
         }
     }
+
+    public void close () {
+        this.cancel();
+        this.notificationSocket.close();
+    }
 }

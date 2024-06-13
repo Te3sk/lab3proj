@@ -1,17 +1,11 @@
 package main.server;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collector;
-import java.util.stream.Collectors;
-
-import javax.xml.crypto.Data;
 
 import main.dataModels.Hotel;
-import main.dataModels.JsonUtil;
 import main.dataModels.Capitals;
 import main.dataModels.Review;
 
@@ -320,5 +314,13 @@ public class HotelManagement {
         }
 
         return weight;
+    }
+
+    /**
+     * save the hotels infos in the JSON file
+     */
+    public void saveHotel () {
+        List<Hotel> temp = new ArrayList<Hotel>(this.hotels.values());
+        dataPersistence.saveHotels(temp, this.hotelPath);
     }
 }

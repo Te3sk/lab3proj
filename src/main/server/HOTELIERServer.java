@@ -5,119 +5,143 @@
 package main.server;
 
 import java.net.Socket;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Scanner;
+import java.util.Timer;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.Set;
 
-// import main.dataModels.JsonUtil;
 import main.dataModels.JsonUtil;
 import main.dataModels.Capitals;
 import main.dataModels.Hotel;
 
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.io.File;
 import java.io.IOException;
 
 public class HOTELIERServer implements Runnable {
-    private int port;
+    private long timeInterval;
+    private NotificationService notificationService;
+    private Selector selector;
+    private int tcpPort;
     private boolean isRunning;
-    private ServerSocket serverSocket;
+    private ServerSocketChannel serverSocketChannel;
     private UserManagement userManagement;
     private HotelManagement hotelManagement;
 
-    private static final String userPath = "../data/users.JSON";
-    private static final String hotelPath = "../data/hotel.JSON";
-    // private HotelManagement hotelManagement;
-
-    // public Server (InetAddress tcpAddr, InetAddress udpAddr, int tcpPort, long interval, int broadcastPort,
-    //         String hotelFile, String userFile) {
-
     /**
-     * HOTELIERServer class constructor
-     * 
-     * @param port specifies which port the server should listen on
-     */
-    public HOTELIERServer(int port){
-        this.port = port;
-        this.isRunning = false;
+      * HOTELIERServer constructor: to start the server properly, the start method must be called.
+
+      * @param tcpAddr The address for the TCP connection
+      * @param udpAddr The address for the UDP connection where data will be streamed
+      * @param tcpPort The port number for the TCP socket
+      * @param interval The time interval for ranking updates in milliseconds
+      * @param broadcastPort The port number for the broadcast connection
+      * @param hotelFile The absolute path to the hotel file
+      * @param userFile The absolute path to the user file
+      */
+    public HOTELIERServer (InetAddress tcpAddr, InetAddress udpAddr, int tcpPort, long interval, int broadcastPort, String hotelFile, String userFile){
+        try { 
+            this.timeInterval = interval;
+            this.hotelManagement = new HotelManagement(hotelFile);
+            this.userManagement = new UserManagement(userFile);
+            this.notificationService = new NotificationService(hotelManagement, udpAddr, broadcastPort);
+            this.serverSocketChannel = serverSocketChannel.open();
+            this.serverSocketChannel.configureBlocking(false);
+            this.serverSocketChannel.bind(new InetSocketAddress(tcpAddr, tcpPort));
+            this.selector.open();
+            this.serverSocketChannel.register(this.selector, SelectionKey.OP_ACCEPT);
+        } catch (Exception e) {
+            System.out.println("Error during server construction: " + e.getMessage());
+        }
     }
 
     /**
      * start the server
      */
     public void start() {
-        // todo - HOTELIERServer.start
-        if (isRunning) {
-            System.out.println("the server il already started");
-            return;
-        }
-
         try {
-            serverSocket = new ServerSocket(port);
-            System.out.println("Server started on the port " + port + ".");
-            isRunning = true;
+            // start listening
+            Thread listener = new Thread(this);
+            listener.start();
+            Timer timer = new Timer();
+            this.isRunning = true;
 
-            // server is listening for incoming connection
-            while (isRunning) {
-                // accept the client connection
-                Socket clientScSocket = serverSocket.accept();
-                System.out.println("accepted connection from " + clientScSocket.getInetAddress());
-
-                // start a thread to handle the connection with the client
-                this.userManagement = new UserManagement("../data/users.JSON");
-                Thread thread = new Thread(new Runnable() {
-                    @Override
-                    public void run () {
-                        // todo - HOTELIERServer.start.run - implement client handling logic
-                    }
-                });
-                thread.start();
-            }
-        } catch (IOException e) {
-            System.out.println("Errore durante l'avvio del server: " + e.getMessage());
-        }
-    }
-
-    public void stop () {
-        isRunning = false;
-        try{
-            if (serverSocket != null) {
-                serverSocket.close();
-            }
-            System.out.println("Server stoped");
-        } catch (IOException e) {
-            System.err.println("Errore durante la chiusura del server: " + e.getMessage());
+            // start broadcasting
+            timer.scheduleAtFixedRate(this.notificationService, this.timeInterval, this.tcpPort);
+            Scanner scanner = new Scanner(System.in);
+            System.out.println("Press any key to stop the server...\n");
+            // wait for shutdown request
+            scanner.nextLine();
+            // shutdown
+            System.out.println("shouting down the server...");
+            scanner.close();
+            this.serverSocketChannel.close();
+            listener.interrupt();
+            this.notificationService.close();
+            timer.cancel();
+            this.selector.close();
+            this.hotelManagement.saveHotel();
+            this.userManagement.saveUsers();
+            this.isRunning = false;
+        } catch (Exception e) {
+            System.out.println("Error during server start: " + e.getMessage());
         }
     }
 
     /**
-     * save user and hotel data in a JSON file
+     * wait for new msgs or connections
      */
-    public void saveData(){
-        // todo - HOTELIERServer.saveData
-        // save users
-        // save hotels
-    }
-
-    // todo - check and handle exception
-    public static void main(String[] args) throws Exception{
-        System.out.println("start execution...");
-        
-        // initializing hotel manager
-        HOTELIERServer HServer = new HOTELIERServer(0); 
-        HServer.initalizeHotel();
-        
-        // test      
-
-    }
-
-    private void initalizeHotel () {
-        this.hotelManagement = new HotelManagement("src/main/data/Hotels.json");
-        System.out.println("hotelManagement initialized...");
-    }
-
     @Override
     public void run() {
+        // Create a ThreadPoolExecutor with a core of pool (size 1, max size 100)
+        // and keep-alive time of 300 sec for idle threads
+        ThreadPoolExecutor executor = new ThreadPoolExecutor(1, 100, 300, TimeUnit.SECONDS, new LinkedBlockingDeque<>());
+
+        // Loop while the server is running
+        while(isRunning) {
+            try{
+                // perform a non blocking selection operation to check for ready channels
+                int readyChannels = selector.selectNow();
+                // if no channels ready, skip this ite
+                if (readyChannels == 0) {
+                    continue;
+                }
+
+                // get the set of selection keys
+                Set<SelectionKey> selectedKeys = selector.selectedKeys();
+                Iterator<SelectionKey> keyIterator = selectedKeys.iterator();
+
+                // iterate over selection keys
+                while(keyIterator.hasNext()) {
+                    SelectionKey key = keyIterator.next();
+
+                    // if the key's channel is ready to accept a new connection 
+                    if (key.isAcceptable()) {
+                        // accept the connection
+                        SocketChannel connection = this.serverSocketChannel.accept();
+                        // configure the connection to be non-blocking
+                        connection.configureBlocking(false);
+                        // register the new connection with the selector
+                        connection.register(this.selector, SelectionKey.OP_READ);
+                        // todo - add the connection to the list of connections 
+
+                    }
+                }
+            } catch (Exception e) {}
+        }
         // TODO - implement client handling logic
+
         // throw new UnsupportedOperationException("Unimplemented method 'run'");
     }
 }
