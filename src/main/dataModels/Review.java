@@ -1,6 +1,9 @@
 package main.dataModels;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Map;
@@ -17,6 +20,19 @@ public class Review {
     private double rate;
     private Map<String, Integer> ratings;
     private Date date;
+
+    /**
+     * constructor
+     * 
+     * @param rate the global rate of the hotel
+     * @param ratings the 
+     * @param date the date of the review
+     */
+    public Review (double rate, Map<String, Integer> ratings, Date date) {
+        this.rate = rate;
+        this.ratings = ratings;
+        this.date = date;
+    }
 
     /**
      * constructor, check parameters validity
@@ -89,6 +105,54 @@ public class Review {
     */
     public void setDate (Date date){
         this.date = date;
+    }
+
+    @Override
+    public String toString() {
+        String res = new String();
+        res += "rate:"+ Double.toString(this.rate) + "_ratings:{";
+
+        for (String key : this.ratings.keySet()) {
+            res += key + ":" + Integer.toString(this.ratings.get(key)) + ",";
+        }
+
+        res += "}_date:" + this.date.toString();
+
+        return res;        
+    }
+
+    public static Review fromString(String str) throws ParseException {
+        Double rate = 0.0;
+        Map<String, Integer> ratings = new HashMap<>();
+        Date date = new Date();
+        
+        String[] parts = str.split("_");
+        for (String part : parts) {
+            String[] keyValue = part.split(":");
+            String key = keyValue[0];
+            String value = keyValue[1];
+
+            switch (key) {
+                case "rate":
+                    rate = Double.parseDouble(value);
+                    break;
+                case "date":
+                    SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy");
+                    date = sdf.parse(value);
+                    break;
+                case "ratings":
+                    String[] ratingsParts = value.split(",");
+                    for (String ratingPart : ratingsParts) {
+                        String[] rating = ratingPart.split(":");
+                        ratings.put(rating[0], Integer.parseInt(rating[1]));
+                    }
+                    break;
+                default:
+                    // todo - error
+            }
+        }
+        Review review = new Review(rate, ratings, date);
+        return review;
     }
 }
 

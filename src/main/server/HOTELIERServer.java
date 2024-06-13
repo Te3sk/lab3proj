@@ -4,30 +4,27 @@
 
 package main.server;
 
-import java.net.Socket;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
+import main.dataModels.*;
+
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.InetAddress;
+// import java.net.MulticastSocket;
+// import java.net.DatagramPacket;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
-import java.util.ArrayList;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Scanner;
+import java.util.Set;
 import java.util.Timer;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.Set;
-
-import main.dataModels.JsonUtil;
-import main.dataModels.Capitals;
-import main.dataModels.Hotel;
-
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.ServerSocket;
-import java.io.File;
-import java.io.IOException;
+// import java.util.TimerTask;
+// import java.util.ArrayList;
 
 public class HOTELIERServer implements Runnable {
     private long timeInterval;
@@ -38,6 +35,7 @@ public class HOTELIERServer implements Runnable {
     private ServerSocketChannel serverSocketChannel;
     private UserManagement userManagement;
     private HotelManagement hotelManagement;
+    private List<RequestHandler> requestHandlers;
 
     /**
       * HOTELIERServer constructor: to start the server properly, the start method must be called.
@@ -99,6 +97,27 @@ public class HOTELIERServer implements Runnable {
         }
     }
 
+
+    /**
+     * Fetches the appropriate RequestHandler based on the given SocketChannel.
+     * 
+     * @param socketChannel The SocketChannel to match with the RequestHandler's SocketChannel.
+     * @return The matching RequestHandler, or null if no match is found.
+     * @throws IOException If an I/O error occurs.
+     */
+    public RequestHandler fetchHandler(SocketChannel socketChannel) throws IOException {
+        // iter over request handlers
+        for (RequestHandler handler : this.requestHandlers) {
+            // take the socketchannel of this current handler
+            SocketChannel handlerChannel = handler.getCallerAddres();
+            if(handlerChannel.getRemoteAddress().equals(socketChannel.getRemoteAddress())) {
+                // if the remote address match with that one in the socketchannel in the parameter
+                return handler;
+            }
+        }
+        return null;
+    }
+
     /**
      * wait for new msgs or connections
      */
@@ -134,14 +153,25 @@ public class HOTELIERServer implements Runnable {
                         connection.configureBlocking(false);
                         // register the new connection with the selector
                         connection.register(this.selector, SelectionKey.OP_READ);
-                        // todo - add the connection to the list of connections 
-
+                        // add new request handler to the list
+                        this.requestHandlers.add(new RequestHandler(this.userManagement, this.hotelManagement, connection, this.selector));
+                        System.out.println("New connection accepted: " + connection.getRemoteAddress());
+                    } else if (key.isReadable()) {
+                        // get the connection from the key
+                        SocketChannel connection = (SocketChannel) key.channel();
+                        connection.keyFor(this.selector).interestOps(0);
+                        executor.submit(this.fetchHandler(connection));
                     }
+                    keyIterator.remove();
                 }
-            } catch (Exception e) {}
+            } catch (Exception e) {
+                if (!this.isRunning) {
+                    System.out.println("Server is shutting down...");
+                    break;
+                }
+                System.out.println(e.getMessage());
+            }
         }
-        // TODO - implement client handling logic
-
-        // throw new UnsupportedOperationException("Unimplemented method 'run'");
+        executor.shutdown();
     }
 }

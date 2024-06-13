@@ -86,13 +86,12 @@ public class UserManagement {
      * @param username
      * @return a fail or success message (String)
      */
-    String logout(String username) {
+    public void logout(String username) throws Exception {
         if(!loggedInUsers.contains(username)){
-            return "Logout error: user not found in logged user list";
+            throw new Exception("Logout error: user not found in logged user list");
         }
 
         loggedInUsers.remove(username);
-        return "Logout successfull";
     }
 
     /**
@@ -100,5 +99,21 @@ public class UserManagement {
      */
     public void saveUsers(){
         dataPersistence.saveUsers(users, this.dataFilePath);
+    }
+
+    /**
+    * @return users parameter
+    */
+    public Map<String, User> getAllUsers (){
+        return this.users;
+    }
+
+
+    public User getUser (String username) throws Exception{
+        User temp = this.users.get(username);
+        if (temp == null) {
+            throw new Exception("Error: username not found");
+        }
+        return temp;    
     }
 }

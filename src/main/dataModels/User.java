@@ -59,12 +59,11 @@ public class User {
     * @return badge parameter
     */
     public String getBadge (){
-        // todo - understand level stuff
         if (this.points == 0) return "TO_UNLOCK";
-        else if (this.points <= 10) return "LEVEL_1";
-        else if (this.points <= 20) return "LEVEL_2";
-        else if (this.points <= 30) return "LEVEL_3";
-        else if (this.points <= 40) return "LEVEL_4";
+        else if (this.points <= 5) return "LEVEL_1";
+        else if (this.points <= 10) return "LEVEL_2";
+        else if (this.points <= 15) return "LEVEL_3";
+        else if (this.points <= 25) return "LEVEL_4";
         else return "LEVEL_EXPERT";
     }
 
