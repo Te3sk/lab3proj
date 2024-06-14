@@ -1,15 +1,12 @@
 package main.server;
 
-import java.io.IOError;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
-import java.util.List;
 import java.util.Map;
 import java.util.TimerTask;
 
-import main.dataModels.Hotel;
 
 public class NotificationService extends TimerTask{
     private HotelManagement hotelManagement;

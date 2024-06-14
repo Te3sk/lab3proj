@@ -186,6 +186,7 @@ public class HotelManagement {
      * Il peso delle recensioni recenti viene normalizzato rispetto al massimo peso
      * delle recensioni recenti per un hotel nella stessa città.
      */
+    @SuppressWarnings("unused")
     public void updateRanking() {
         // create a map to group hotels by city
         Map<String, List<Hotel>> hotelsByCity = this.groupByCity();
@@ -201,9 +202,12 @@ public class HotelManagement {
             // calculate weights for recency
 
             for (Hotel hotel : cityHotels) {
+                // for each review of the hotel
                 for (Review review : hotel.getReviews()) {
+                    // calculate the weight of the review
                     double recentWeight = calculateRecentWeight(hotel);
                     if (maxRecentWeight < recentWeight) {
+                        // update the max weight
                         maxRecentWeight = recentWeight;
                     }
                 }

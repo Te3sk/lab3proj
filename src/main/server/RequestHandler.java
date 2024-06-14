@@ -1,10 +1,8 @@
 package main.server;
 
 import java.io.IOException;
-import java.net.ProtocolException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
-import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
@@ -28,59 +26,6 @@ import main.dataModels.Review;
 // QUIT
 
 // todo - read from socket reader method in server 
-/*
- *     protected String processMessage (String json) throws IOException, ProtocolException {
-        JsonReader reader = new JsonReader(new StringReader(json));
-        reader.beginObject();
-        String op;
-        if (reader.nextName().equals("operation")) {
-            op = reader.nextString();
-            switch (op) {
-                case "register":
-                    this.register(reader);
-                    break;
-
-                case "login":
-                    this.login(reader);
-                    break;
-
-                case "search":
-                    this.singleSearch(reader);
-                    break;
-
-                case "searchAll":
-                    this.mulSearch(reader);
-                    break;
-
-                case "review":
-                    this.newReview(reader);
-                    break;
-
-                case "badge":
-                    this.getBadge();
-                    break;
-
-                case "logout":
-                    this.logout();
-                    break;
-
-                case "quit":
-                    this.quit();
-                    break;
-
-                default: 
-                    reader.close();
-                    throw new ProtocolException();
-            }
-        } else {
-            reader.close();
-            throw new ProtocolException();
-        }
-        reader.endObject();
-        reader.close();
-        return op;
-    }
- */
 
 public class RequestHandler implements Runnable {
     private String type;

@@ -4,8 +4,6 @@
 
 package main.server;
 
-import main.dataModels.*;
-
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.InetAddress;
@@ -54,10 +52,10 @@ public class HOTELIERServer implements Runnable {
             this.hotelManagement = new HotelManagement(hotelFile);
             this.userManagement = new UserManagement(userFile);
             this.notificationService = new NotificationService(hotelManagement, udpAddr, broadcastPort);
-            this.serverSocketChannel = serverSocketChannel.open();
+            this.serverSocketChannel = ServerSocketChannel.open();
             this.serverSocketChannel.configureBlocking(false);
             this.serverSocketChannel.bind(new InetSocketAddress(tcpAddr, tcpPort));
-            this.selector.open();
+            this.selector = Selector.open();
             this.serverSocketChannel.register(this.selector, SelectionKey.OP_ACCEPT);
         } catch (Exception e) {
             System.out.println("Error during server construction: " + e.getMessage());
@@ -172,6 +170,7 @@ public class HOTELIERServer implements Runnable {
                 System.out.println(e.getMessage());
             }
         }
+        executor.close();
         executor.shutdown();
     }
 }
