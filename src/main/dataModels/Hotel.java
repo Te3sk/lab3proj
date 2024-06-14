@@ -15,6 +15,24 @@ public class Hotel {
     private double rate;
     private Map<String, Integer> ratings;
 
+    @Override
+    public String toString(){
+        String string = "";
+        string += "(ID: " + this.id + ") " + this.name + "\nRANK: " + Integer.toString(this.rank) + "\n" + this.city + " - " + this.phone + "\n\t" + description + "\nSERVICES:\n";
+        
+        for (String serv : this.services) {
+            string += "- " + serv + "\n";
+        }
+
+        string += Integer.toString(this.reviews.size()) + " reviews:\n";
+        string += "\tAverage Global Rate: " + Double.toString(this.rate);
+        for (String key : this.ratings.keySet()) {
+            string += "\t\t" + key + Integer.toString(this.ratings.get(key));
+        }
+
+        return string;
+    }
+
     /**
     * @return id parameter
     */

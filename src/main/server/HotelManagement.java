@@ -31,11 +31,18 @@ public class HotelManagement {
      * 
      * @param hotelName name of the hotel you want to search
      * @param city      name of the city that contains the hotel
-     * @return an Hotel obj with all the info required, null if the hotel not found
+     * @return an Hotel obj with all the info required
+     * @throws EMPTYF if a parameter is empty/null
+     * @throws CITY if can't find the city
+     * @throws HOTEL if can't find the hotel
      */
     public Hotel searchHotel(String hotelName, String city) throws Exception {
+        if (hotelName == null || hotelName.isEmpty() || city == null || city.isEmpty()) {
+            throw new Exception("EMPTYF");
+        }
+        
         if (!Capitals.isValidCapital(city)) {
-            throw new Exception("Search Hotel Error: the city must be one of the 20 italian capitals.");
+            throw new Exception("CITY");
         }
 
         for (Hotel hotel : this.hotels.values()) {
@@ -44,7 +51,7 @@ public class HotelManagement {
             }
         }
 
-        return null;
+        throw new Exception("HOTEL");
     }
 
     /**
@@ -56,7 +63,7 @@ public class HotelManagement {
      */
     public List<Hotel> searchHotelByCity(String city) throws Exception {
         if (!Capitals.isValidCapital(city)) {
-            throw new Exception("Search Hotel Error: the city must be one of the 20 italian capitals.");
+            throw new Exception("CITY");
         }
 
         List<Hotel> hotelInCity = new ArrayList<Hotel>();
@@ -88,7 +95,7 @@ public class HotelManagement {
      * @param nomeCittà city of the hotel
      * @param review    the review (obj) you want to add
      */
-    public void addReview(String nomeHotel, String nomeCittà, Review review) {
+    public void addReview(String nomeHotel, String nomeCittà, Review review) throws Exception{
         // check if hotel exists and find it
         String currentId = "empty";
 
@@ -100,7 +107,7 @@ public class HotelManagement {
         }
 
         if (currentId.equals("empty")) {
-            // todo - errore: hotel non trovato
+            throw new Exception("HOTEL");
         }
 
         // todo - capire se così va bene, se current punta allo stesso indirizzo di
@@ -131,7 +138,7 @@ public class HotelManagement {
      * @param nomeCittà the city of the hotel
      * @return a list of Review obj
      */
-    public List<Review> getReviews(String nomeHotel, String nomeCittà) {
+    public List<Review> getReviews(String nomeHotel, String nomeCittà) throws Exception {
         // check if hotel exists and find it
         String currentId = "empty";
 
@@ -143,7 +150,7 @@ public class HotelManagement {
         }
 
         if (currentId.equals("empty")) {
-            // todo - errore: hotel non trovato
+            throw new Exception("HOTEL");
         }
 
         // todo - capire se così va bene, se current punta allo stesso indirizzo di

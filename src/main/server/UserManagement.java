@@ -32,17 +32,18 @@ public class UserManagement {
      * 
      * @param username
      * @param psw
-     * @throws Exceptions if empty fields or existing username
+     * @throws EMPTYF if the fields is empty
+     * @throws USERN_Y if the username already exists
      */
     public synchronized void register(String username, String psw) throws Exception {
         // check if username and psw is empty
         if (username == null || username.isEmpty() || psw == null || psw.isEmpty()) {
-            throw new Exception("Register error: username and password cannot be empty");
+            throw new Exception("EMPTYF");
         }
         // check if the username already exists
         for (String usrnm : this.users.keySet()) {
             if (username.equals(usrnm)) {
-                throw new Exception("Register error: username already exists");
+                throw new Exception("USERN_Y");
             }
         }
 
@@ -57,18 +58,21 @@ public class UserManagement {
      * @param username
      * @param psw
      * @return a fail or success message (String)
+     * @throws EMPTYF if the fields is empty
+     * @throws USERN_N if the user not exists
+     * @throws WRONGPSW if the password is incorrect
      */
     public synchronized void login(String username, String psw) throws Exception {
         // check if username or psw are empty
         if (username == null || username.isEmpty() || psw == null || psw.isEmpty()) {
-            throw new Exception("Login error: username and password cannot be empty");
+            throw new Exception("EMPTYF");
         }
 
         // check if username exists
         User user = this.users.get(username);
 
         if (user == null) {
-            throw new Exception("Username not found.");
+            throw new Exception("USERN_N");
         }
 
         // check if psw match with the User
@@ -85,10 +89,11 @@ public class UserManagement {
      * 
      * @param username
      * @return a fail or success message (String)
+     * @throws USERN_N if can't find the username
      */
     public void logout(String username) throws Exception {
         if(!loggedInUsers.contains(username)){
-            throw new Exception("Logout error: user not found in logged user list");
+            throw new Exception("USERN_N");
         }
 
         loggedInUsers.remove(username);

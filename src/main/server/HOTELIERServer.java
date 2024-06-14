@@ -7,8 +7,6 @@ package main.server;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.InetAddress;
-// import java.net.MulticastSocket;
-// import java.net.DatagramPacket;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.SelectionKey;
@@ -21,8 +19,6 @@ import java.util.Timer;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-// import java.util.TimerTask;
-// import java.util.ArrayList;
 
 public class HOTELIERServer implements Runnable {
     private long timeInterval;
@@ -36,18 +32,21 @@ public class HOTELIERServer implements Runnable {
     private List<RequestHandler> requestHandlers;
 
     /**
-      * HOTELIERServer constructor: to start the server properly, the start method must be called.
-
-      * @param tcpAddr The address for the TCP connection
-      * @param udpAddr The address for the UDP connection where data will be streamed
-      * @param tcpPort The port number for the TCP socket
-      * @param interval The time interval for ranking updates in milliseconds
-      * @param broadcastPort The port number for the broadcast connection
-      * @param hotelFile The absolute path to the hotel file
-      * @param userFile The absolute path to the user file
-      */
-    public HOTELIERServer (InetAddress tcpAddr, InetAddress udpAddr, int tcpPort, long interval, int broadcastPort, String hotelFile, String userFile){
-        try { 
+     * HOTELIERServer constructor: to start the server properly, the start method
+     * must be called.
+     * 
+     * @param tcpAddr       The address for the TCP connection
+     * @param udpAddr       The address for the UDP connection where data will be
+     *                      streamed
+     * @param tcpPort       The port number for the TCP socket
+     * @param interval      The time interval for ranking updates in milliseconds
+     * @param broadcastPort The port number for the broadcast connection
+     * @param hotelFile     The absolute path to the hotel file
+     * @param userFile      The absolute path to the user file
+     */
+    public HOTELIERServer(InetAddress tcpAddr, InetAddress udpAddr, int tcpPort, long interval, int broadcastPort,
+            String hotelFile, String userFile) {
+        try {
             this.timeInterval = interval;
             this.hotelManagement = new HotelManagement(hotelFile);
             this.userManagement = new UserManagement(userFile);
@@ -95,11 +94,11 @@ public class HOTELIERServer implements Runnable {
         }
     }
 
-
     /**
      * Fetches the appropriate RequestHandler based on the given SocketChannel.
      * 
-     * @param socketChannel The SocketChannel to match with the RequestHandler's SocketChannel.
+     * @param socketChannel The SocketChannel to match with the RequestHandler's
+     *                      SocketChannel.
      * @return The matching RequestHandler, or null if no match is found.
      * @throws IOException If an I/O error occurs.
      */
@@ -108,8 +107,9 @@ public class HOTELIERServer implements Runnable {
         for (RequestHandler handler : this.requestHandlers) {
             // take the socketchannel of this current handler
             SocketChannel handlerChannel = handler.getCallerAddres();
-            if(handlerChannel.getRemoteAddress().equals(socketChannel.getRemoteAddress())) {
-                // if the remote address match with that one in the socketchannel in the parameter
+            if (handlerChannel.getRemoteAddress().equals(socketChannel.getRemoteAddress())) {
+                // if the remote address match with that one in the socketchannel in the
+                // parameter
                 return handler;
             }
         }
@@ -123,11 +123,12 @@ public class HOTELIERServer implements Runnable {
     public void run() {
         // Create a ThreadPoolExecutor with a core of pool (size 1, max size 100)
         // and keep-alive time of 300 sec for idle threads
-        ThreadPoolExecutor executor = new ThreadPoolExecutor(1, 100, 300, TimeUnit.SECONDS, new LinkedBlockingDeque<>());
+        ThreadPoolExecutor executor = new ThreadPoolExecutor(1, 100, 300, TimeUnit.SECONDS,
+                new LinkedBlockingDeque<>());
 
         // Loop while the server is running
-        while(isRunning) {
-            try{
+        while (isRunning) {
+            try {
                 // perform a non blocking selection operation to check for ready channels
                 int readyChannels = selector.selectNow();
                 // if no channels ready, skip this ite
@@ -140,10 +141,10 @@ public class HOTELIERServer implements Runnable {
                 Iterator<SelectionKey> keyIterator = selectedKeys.iterator();
 
                 // iterate over selection keys
-                while(keyIterator.hasNext()) {
+                while (keyIterator.hasNext()) {
                     SelectionKey key = keyIterator.next();
 
-                    // if the key's channel is ready to accept a new connection 
+                    // if the key's channel is ready to accept a new connection
                     if (key.isAcceptable()) {
                         // accept the connection
                         SocketChannel connection = this.serverSocketChannel.accept();
@@ -152,7 +153,8 @@ public class HOTELIERServer implements Runnable {
                         // register the new connection with the selector
                         connection.register(this.selector, SelectionKey.OP_READ);
                         // add new request handler to the list
-                        this.requestHandlers.add(new RequestHandler(this.userManagement, this.hotelManagement, connection, this.selector));
+                        this.requestHandlers.add(new RequestHandler(this.userManagement, this.hotelManagement,
+                                connection, this.selector));
                         System.out.println("New connection accepted: " + connection.getRemoteAddress());
                     } else if (key.isReadable()) {
                         // get the connection from the key

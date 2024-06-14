@@ -15,6 +15,7 @@ import java.util.Set;
 import main.dataModels.Hotel;
 import main.dataModels.Review;
 
+// ! OPERATION TYPES
 // SIGNIN - LOGIN - LOGOUT - HOTEL - ALLHOTEL - REVIEW - BADGE
 // register - SIGNIN
 // login - LOGIN
@@ -24,6 +25,15 @@ import main.dataModels.Review;
 // insertReview - REVIEW
 // showMyBadges - BADGE
 // QUIT
+
+// ! RESPONSE TYPES
+// success - *success string*
+// existing username - USERN_Y
+// non existing username - USERN_N
+// empty fields - EMPTYF
+// wrong password - WRONGPSW
+// non existing hotel - HOTEL
+// non existing city - CITY
 
 // todo - read from socket reader method in server 
 
@@ -93,8 +103,6 @@ public class RequestHandler implements Runnable {
                 System.out.println(e.getMessage());
             }
         } else {
-            // 
-
             // SIGNIN - LOGIN - LOGOUT - HOTEL - ALLHOTEL - REVIEW - BADGE
             switch (parts[0].split(":")[1]) {
                 case "SIGNIN":
@@ -111,8 +119,8 @@ public class RequestHandler implements Runnable {
                             parts[2].split(":")[1]);
                 case "REVIEW":
                     try {
-                        this.insertReview(parts[0].split(":")[1], this.callerAddress, parts[1].split(":")[1],
-                                Review.fromString(parts[2].split(":")[1]));
+                        this.insertReview(parts[0].split(":")[1], this.callerAddress, parts[1].split(":")[1],parts[2].split(":")[1],
+                                Review.fromString(parts[3].split(":")[1]));
                     } catch (Exception e) {
                         try {
                             this.write(e.getMessage());
@@ -313,20 +321,26 @@ public class RequestHandler implements Runnable {
      * @param username      The username of the user.
      * @param review        The review to be inserted.
      */
-    public void insertReview(String type, SocketChannel callerAddress, String username, Review review) {
+    public void insertReview(String type, SocketChannel callerAddress, String username, String hotelName, Review review) {
         this.type = type;
         this.callerAddress = callerAddress;
         this.username = username;
         this.psw = null;
-        this.hotelName = null;
+        this.hotelName = hotelName;
         this.cityName = null;
         this.review = review;
 
-        hotelManagement.addReview(this.getHotelName(), this.getCityName(), this.getReview());
         try {
+            hotelManagement.addReview(this.getHotelName(), this.getCityName(), this.getReview());
             this.write("Review added correctly.");
-        } catch (Exception e) {
+        } catch (IOException e) {
             System.out.println(e.getMessage());
+        } catch (Exception e) {
+            try{
+                this.write(e.getMessage());
+            } catch (IOException f) {
+                System.out.println(f.getMessage());
+            }
         }
     }
 
