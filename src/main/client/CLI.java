@@ -176,6 +176,7 @@ public class CLI {
     public Object[] insertReview(){
         Scanner sc = new Scanner(System.in);
         String hotelName = "";
+        String cityName = "";
         Double rate = -1.0;
         int temp = -1;
         Map<String, Integer> ratings = new HashMap<String, Integer>();
@@ -185,6 +186,10 @@ public class CLI {
         // get the hotel name
         System.out.println("Hotel Name:");
         hotelName = sc.nextLine();
+
+        // todo - get the cit name
+        System.out.println("City Name:");
+        cityName = sc.nextLine();
         
         // get the global rate
         System.out.println("Global Rate (can use decimal point number):");

@@ -119,8 +119,8 @@ public class RequestHandler implements Runnable {
                             parts[2].split(":")[1]);
                 case "REVIEW":
                     try {
-                        this.insertReview(parts[0].split(":")[1], this.callerAddress, parts[1].split(":")[1],parts[2].split(":")[1],
-                                Review.fromString(parts[3].split(":")[1]));
+                        this.insertReview(parts[0].split(":")[1], this.callerAddress, parts[1].split(":")[1],parts[2].split(":")[1], parts[3].split(":")[1],
+                                Review.fromString(parts[4].split(":")[1]));
                     } catch (Exception e) {
                         try {
                             this.write(e.getMessage());
@@ -321,13 +321,13 @@ public class RequestHandler implements Runnable {
      * @param username      The username of the user.
      * @param review        The review to be inserted.
      */
-    public void insertReview(String type, SocketChannel callerAddress, String username, String hotelName, Review review) {
+    public void insertReview(String type, SocketChannel callerAddress, String username, String hotelName, String cityName, Review review) {
         this.type = type;
         this.callerAddress = callerAddress;
         this.username = username;
         this.psw = null;
         this.hotelName = hotelName;
-        this.cityName = null;
+        this.cityName = cityName;
         this.review = review;
 
         try {

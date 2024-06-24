@@ -63,6 +63,7 @@ public class HOTELIERCustomerClient {
         this.cli = new CLI();
         // todo - this.executorService.submit() - classe per ricevere notifiche sulla multicast socket
         
+        // set error messages
         this.errors.add("USERN_Y");
         this.errors.add("USERN_N");
         this.errors.add("EMPTYF");
@@ -70,6 +71,7 @@ public class HOTELIERCustomerClient {
         this.errors.add("HOTEL");
         this.errors.add("CITY");
 
+        // set operations map
         this.op.put(1, "SIGNIN");
         this.op.put(2, "LOGIN");
         this.op.put(3, "HOTEL");
@@ -115,7 +117,7 @@ public class HOTELIERCustomerClient {
             switch (n) {
                 // signin
                 case 1:
-                    creds = this.cli.insertCred();
+                    String[] creds = this.cli.insertCred();
                     try {
                         this.register(creds[0], creds[1]);
                     } catch (Exception e) {
@@ -150,11 +152,11 @@ public class HOTELIERCustomerClient {
                     }
                     break;
                 // review
-                case 6:
+                case 5:
                     // todo -  check if the Object[].. stuff work
                     param2 = this.cli.insertReview();
                     try {
-                        this.ins
+                        // this.ins
                     } catch (Exception e) {
                         System.out.println(e.getMessage());
                     }
