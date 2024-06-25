@@ -28,7 +28,9 @@ public class ClientMain {
         Integer udpPort = Integer.parseInt(properties.getProperty("client.udp.port"));
         
         // start the client instance
+        System.out.println("call HOTELIERCustomerClient constructor");
         HOTELIERCustomerClient client = new HOTELIERCustomerClient(tcpAddr, udpAddr, tcpPort, udpPort);
+        System.out.println("start the client...");
         client.start();            
         } catch (UnknownHostException e) {
             System.out.println("Error, invalid ip address: " + e);

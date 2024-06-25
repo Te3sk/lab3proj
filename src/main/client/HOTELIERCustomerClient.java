@@ -40,35 +40,53 @@ public class HOTELIERCustomerClient {
     private MulticastSocket notificator;
     private ExecutorService executorService;
     private Map<Integer, String> op = new HashMap<Integer, String>();
+    private Boolean isConnect = false;
 
     private Set<String> errors = new HashSet<String>();
 
     /**
-     * The HOTELIERCustomerClient class represents a client for the HOTELIER customer system.
-     * It provides functionality for managing user authentication and handling errors.
+     * The HOTELIERCustomerClient class represents a client for the HOTELIER
+     * customer system.
+     * It provides functionality for managing user authentication and handling
+     * errors.
      */
-     @SuppressWarnings("deprecation") // todo - temp ignoring warning
-    public HOTELIERCustomerClient(InetAddress tcpAddr, InetAddress udpAddr, Integer port, Integer multicastPort) throws IOException {
+    @SuppressWarnings("deprecation") // todo - temp ignoring warning
+    public HOTELIERCustomerClient(InetAddress tcpAddr, InetAddress udpAddr, Integer port, Integer multicastPort)
+            throws IOException {
         try {
+            System.out.println("\t\tHOTELIERCustomerClient constructor...");
             this.username = null;
             this.logged = false;
             // initialize the selector and the socket channel
             this.selector = Selector.open();
             this.socketChannel = SocketChannel.open();
-            this.socketChannel.connect(new InetSocketAddress(tcpAddr, port));
+            System.out.println("try to connect with the server...");
             this.socketChannel.configureBlocking(false);
             this.socketChannel.register(this.selector, 0);
+            this.isConnect = this.socketChannel.connect(new InetSocketAddress(tcpAddr, port));
+
+            // wait for the connection to complete
+            while (!this.socketChannel.finishConnect()) {
+                // Wait or do nothing until the connection is established
+            }
+            System.out.println("connected with the server...");
+
+            this.socketChannel.configureBlocking(false);
+
             // initialize the multicast socket
             this.notificator = new MulticastSocket(multicastPort);
             // join the multicast group
             this.notificator.joinGroup(udpAddr);
             this.executorService = Executors.newSingleThreadExecutor();
+        } catch (IOException e) {
+            System.out.println("IO Error during client initialization:\n" + e.getMessage());
         } catch (Exception e) {
-            // TODO: handle exception
+            System.out.println("Error during client initialization:\n" + e.getMessage());
         }
         this.cli = new CLI();
-        // todo - this.executorService.submit() - classe per ricevere notifiche sulla multicast socket
-        
+        // todo - this.executorService.submit() - classe per ricevere notifiche sulla
+        // multicast socket
+
         // set error messages
         this.errors.add("USERN_Y");
         this.errors.add("USERN_N");
@@ -96,6 +114,12 @@ public class HOTELIERCustomerClient {
         // todo - HOTELIERServer.start
         System.out.println("Client is running...");
 
+        // todo - temp
+        if (this.socketChannel.keyFor(this.selector) == null) {
+            System.out.println("key is null");
+        } else {
+            System.out.println("key is not null");
+        }
         // ! temp test
         // HOME
         // int n = cli.homePage(null);
@@ -103,9 +127,9 @@ public class HOTELIERCustomerClient {
 
         // INSERT CREDENTIAL (SIGNIN AND LOGIN)
         // String[] cred = cli.insertCred();
-        // this.username = cred[0];
-        // this.psw = cred[1];
-        // System.out.println("username: " + this.username + " | psw: " + this.psw);
+        // String username = cred[0];
+        // String psw = cred[1];
+        // System.out.println("username: " + username + " | psw: " + psw);
 
         // INSERT REVIEW
         // Object[] temp = cli.insertReview();
@@ -116,7 +140,7 @@ public class HOTELIERCustomerClient {
         int n = -1;
         n = this.cli.homePage(null);
 
-        while(true) {
+        while (true) {
             String[] param = null;
             String city = null;
             Object[] param2 = null;
@@ -127,7 +151,7 @@ public class HOTELIERCustomerClient {
                     try {
                         this.register(creds[0], creds[1]);
                     } catch (Exception e) {
-                        System.out.println(e.getMessage());
+                        System.out.println("Error during registration: " + e.getMessage());
                     }
                     break;
                 // login
@@ -139,7 +163,7 @@ public class HOTELIERCustomerClient {
                         System.out.println(e.getMessage());
                     }
                     break;
-                //hotel
+                // hotel
                 case 3:
                     param = this.cli.searchHotel();
                     try {
@@ -159,7 +183,7 @@ public class HOTELIERCustomerClient {
                     break;
                 // review
                 case 5:
-                    // todo -  check if the Object[].. stuff work
+                    // todo - check if the Object[].. stuff work
                     param2 = this.cli.insertReview();
                     try {
                         // this.ins
@@ -169,7 +193,7 @@ public class HOTELIERCustomerClient {
                 case 7:
                     // logout
                 case 8:
-                    // quit            
+                    // quit
                 default:
                     break;
             }
@@ -239,7 +263,16 @@ public class HOTELIERCustomerClient {
      */
     protected void write(String message) throws IOException {
         // set the channel interest for writing operation
-        socketChannel.keyFor(selector).interestOps(SelectionKey.OP_WRITE);
+
+        SelectionKey key = this.socketChannel.keyFor(selector);
+        if (key == null) {
+            System.out.println("channel not registered or closed");
+            return; // exit from the method if the channel is not registered or closed
+        }
+        System.out.println("\t\ttemp");
+
+        key.interestOps(SelectionKey.OP_WRITE);
+        // socketChannel.keyFor(selector).interestOps(SelectionKey.OP_WRITE);
 
         // wait untill there are ready selection
         while (this.selector.select() == 0) {
@@ -295,6 +328,7 @@ public class HOTELIERCustomerClient {
 
         // send cred
         this.write(req);
+
         // recieve response
         String response = this.readAsString();
         if (!this.errors.contains(response)) {
@@ -321,7 +355,6 @@ public class HOTELIERCustomerClient {
      * @param psw
      */
     public void login(String username, String psw) throws Exception {
-        // todo - HOTELIERServer.login
         String req = "";
         req += "_LOGIN_" + this.socketChannel + "_" + username + "_" + psw;
 
@@ -383,6 +416,8 @@ public class HOTELIERCustomerClient {
     public void searchHotel(String nomeHotel, String città) throws Exception {
         String req = "_HOTEL_" + this.socketChannel + "_" + this.username + "_" + nomeHotel + "_" + città;
 
+        this.write(req);
+
         String response = this.readAsString();
 
         if (!this.errors.contains(response)) {
@@ -411,8 +446,26 @@ public class HOTELIERCustomerClient {
      * @param città
      */
     public void searchAllHotels(String città) throws Exception {
-        // todo - HOTELIERServer.searchAllHotels
+        String req = "_ALLHOTEL_" + this.socketChannel + "_" + this.username + "_" + città;
+        
+        this.write(req);
 
+        String response = this.readAsString();
+        if(!this.errors.contains(response)){
+            System.out.println(response);
+        } else {
+            switch (response) {
+                case "CITY":
+                    System.out.println("Error: city not found");
+                    break;
+                case "EMPTYF":
+                    System.out.println("\tError: empty values");
+                    break;
+                default:
+                    System.out.println(response);
+                    break;
+            }
+        }
     }
 
     /**
@@ -425,13 +478,61 @@ public class HOTELIERCustomerClient {
      */
     public void insertReview(String hotel, String città, Review review)
             throws Exception {
-        // todo - HOTELIERServer.insertReview
+        String req = "_REVIEW_" + this.socketChannel + "_" + this.username + "_" + hotel + "_" + città + "_"
+                + Double.toString(review.getRate()) + "_";
+
+        Map<String, Integer> ratings = review.getRatings();
+        for (String key : ratings.keySet()) {
+            req += key + ":" + Integer.toString(ratings.get(key)) + ",";
+        }
+
+        this.write(req);
+
+        String response = this.readAsString();
+        if (!this.errors.contains(response)) {
+            System.out.println(response);
+        } else {
+            switch (response) {
+                case "HOTEL":
+                    System.out.println("Error: hotel not found");
+                    break;
+                case "CITY":
+                    System.out.println("Error: city not found");
+                    break;
+                case "EMPTYF":
+                    System.out.println("\tError: empty values");
+                    break;
+                default:
+                    System.out.println(response);
+                    break;
+            }
+        }
     }
 
     /**
      * show the badges of the users
      */
     public void showMyBadges() throws Exception {
-        // todo - HOTELIERServer.showMyBadges
+        String req = "_BADGE_" + this.socketChannel + "_" + this.username;
+
+        this.write(req);
+        
+        String response = this.readAsString();
+
+        if(!this.errors.contains(response)){
+            System.out.println(response);
+        } else {
+            switch (response) {
+                case "USERN_N":
+                    System.out.println("Error: username not found");
+                    break;
+                case "EMPTYF":
+                    System.out.println("\tError: empty values");
+                    break;
+                default:
+                    System.out.println(response);
+                    break;
+            }
+        }
     }
 }

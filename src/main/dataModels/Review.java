@@ -73,7 +73,7 @@ public class Review {
     }
 
     /**
-    * @return rate parameter
+    * @return (Double) rate parameter
     */
     public double getRate (){
         return this.rate;

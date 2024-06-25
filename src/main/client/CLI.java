@@ -1,10 +1,10 @@
 package main.client;
 
+import java.io.Console;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.Set;
 
@@ -12,8 +12,9 @@ import main.dataModels.Review;
 
 public class CLI {
     // standard message
-    String dash = "---------------------------------";
-    String invalidInput = "\tInvalid input, re-try!\n" + this.dash;
+    private String dash = "---------------------------------";
+    private String invalidInput = "\tInvalid input, re-try!\n" + this.dash;
+    private Scanner sc = new Scanner(System.in);
 
     /**
      * home page of the client interface
@@ -22,7 +23,6 @@ public class CLI {
      * @return the number of the operation chosen by the user
      */
     public int homePage(String username) {
-        Scanner sc = new Scanner(System.in);
         System.out.println(this.dash + "\n");
         Map<Integer, String> op = new HashMap<>();
 
@@ -85,16 +85,15 @@ public class CLI {
 
         do {
             System.out.println("Insert the number of the operation:");
-            while (!sc.hasNextInt()) {
+            while (!this.sc.hasNextInt()) {
                 System.out.println(this.invalidInput);
-                sc.next();
+                this.sc.next();
             }
 
-            n = sc.nextInt();
+            n = this.sc.nextInt();
         } while (!valid.contains(n));
 
         System.out.println("Operazione scelta: " + op.get(n));
-        sc.close();
 
         return n;
     }
@@ -110,42 +109,19 @@ public class CLI {
         String psw = null;
 
         System.out.println(this.dash + "\n\tREGISTRATION\n" + this.dash);
+        
+        // todo - the first time is ok with this, since the second have to enter a line before the program print "Username"
+        // if (this.sc.hasNext()) {
+        //     this.sc.nextLine();
+        // }
+
+        this.sc.nextLine();
 
         System.out.println("Username:");
-        Scanner sc = new Scanner(System.in);
-        // while(username == null) {
-
-        // while(sc.hasNextLine()) {
-        // username = sc.nextLine();
-        // }
-        // }
-
-        try {
-            System.out.println("Username:");
-            while (username == null || username.isEmpty()) {
-                if (sc.hasNextLine()) {
-                    username = sc.nextLine();
-                    if (username.isEmpty()) {
-                        System.out.println("Username cannot be empty. Please enter your username:");
-                    }
-                } else {
-                    System.out.println("No input available.");
-                    // break;
-                }
-            }
-            System.out.println("You entered: " + username);
-        } catch (NoSuchElementException e) {
-            System.out.println("Error: No line found.");
-        } finally {
-            sc.close();
-        }
-
+        username = this.sc.nextLine();
+        
         System.out.println("Password:");
-        while (sc.hasNextLine()) {
-            psw = sc.nextLine();
-        }
-
-        sc.close();
+        psw = this.sc.nextLine();
 
         String[] res = new String[2];
         res[0] = username;
@@ -162,7 +138,6 @@ public class CLI {
      *         by the user
      */
     public String[] searchHotel() {
-        Scanner sc = new Scanner(System.in);
         String hotelName = null;
         String cityName = null;
         System.out.println(this.dash + "\n\tSEARCHING HOTEL (by name and city)\n" + this.dash);
@@ -172,7 +147,7 @@ public class CLI {
         System.out.println("City Name:");
         cityName = sc.nextLine();
 
-        sc.close();
+        // // sc.close();
 
         String[] res = new String[2];
         res[0] = hotelName;
@@ -193,7 +168,7 @@ public class CLI {
         System.out.println("City Name:");
         cityName = sc.nextLine();
 
-        sc.close();
+        // // sc.close();
 
         return cityName;
     }
@@ -218,7 +193,6 @@ public class CLI {
         System.out.println("Hotel Name:");
         hotelName = sc.nextLine();
 
-        // todo - get the cit name
         System.out.println("City Name:");
         cityName = sc.nextLine();
 
@@ -264,7 +238,7 @@ public class CLI {
         // compute the date
         Date date = new Date();
 
-        sc.close();
+        // // sc.close();
 
         Object[] res = new Object[2];
         res[0] = hotelName;
@@ -273,4 +247,8 @@ public class CLI {
         return res;
     }
 
+    public void exit() {
+        // todo
+        this.sc.close(); 
+    }
 }
