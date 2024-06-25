@@ -2,6 +2,8 @@
 // run: java -cp "bin;lib/*" main.client.ClientMain
 // complete : javac -d bin -cp lib/* src/main/dataModels/*.java src/main/server/*.java src/main/client/*.java && java -cp "bin;lib/*" main.client.ClientMain
 
+// additional param: -Xlint:-deprecation to disable deprecation warnings
+
 package main.client;
 
 import java.io.IOException;
@@ -15,7 +17,8 @@ import java.util.Properties;
 public class ClientMain {
     public static void main (String[] args) {
         // take args (from a config file)
-        try(InputStream input = Files.newInputStream(Paths.get("../../../config/clientConfig.properties"))) {
+        // try(InputStream input = Files.newInputStream(Paths.get("../../../config/clientConfig.properties"))) {
+        try(InputStream input = Files.newInputStream(Paths.get("config/clientConfig.properties"))) {
         Properties properties = new Properties();
         // load properties from conf file
         properties.load(input);    

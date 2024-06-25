@@ -4,11 +4,11 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.Set;
 
 import main.dataModels.Review;
-
 
 public class CLI {
     // standard message
@@ -96,26 +96,54 @@ public class CLI {
         System.out.println("Operazione scelta: " + op.get(n));
         sc.close();
 
-
         return n;
     }
 
     /**
      * registration of a new user
      * 
-     * @return an array of 2 strings, the first is the username, the second is the password
+     * @return an array of 2 strings, the first is the username, the second is the
+     *         password
      */
     public String[] insertCred() {
-        Scanner sc = new Scanner(System.in);
         String username = null;
         String psw = null;
 
         System.out.println(this.dash + "\n\tREGISTRATION\n" + this.dash);
 
         System.out.println("Username:");
-        username = sc.nextLine();
+        Scanner sc = new Scanner(System.in);
+        // while(username == null) {
+
+        // while(sc.hasNextLine()) {
+        // username = sc.nextLine();
+        // }
+        // }
+
+        try {
+            System.out.println("Username:");
+            while (username == null || username.isEmpty()) {
+                if (sc.hasNextLine()) {
+                    username = sc.nextLine();
+                    if (username.isEmpty()) {
+                        System.out.println("Username cannot be empty. Please enter your username:");
+                    }
+                } else {
+                    System.out.println("No input available.");
+                    // break;
+                }
+            }
+            System.out.println("You entered: " + username);
+        } catch (NoSuchElementException e) {
+            System.out.println("Error: No line found.");
+        } finally {
+            sc.close();
+        }
+
         System.out.println("Password:");
-        psw = sc.nextLine();
+        while (sc.hasNextLine()) {
+            psw = sc.nextLine();
+        }
 
         sc.close();
 
@@ -127,9 +155,11 @@ public class CLI {
     }
 
     /**
-     * Prompts the user to enter a hotel name and city name, and returns an array containing the entered values.
+     * Prompts the user to enter a hotel name and city name, and returns an array
+     * containing the entered values.
      *
-     * @return an array of strings containing the hotel name and city name entered by the user
+     * @return an array of strings containing the hotel name and city name entered
+     *         by the user
      */
     public String[] searchHotel() {
         Scanner sc = new Scanner(System.in);
@@ -144,7 +174,7 @@ public class CLI {
 
         sc.close();
 
-        String [] res = new String[2];
+        String[] res = new String[2];
         res[0] = hotelName;
         res[1] = cityName;
         return res;
@@ -155,7 +185,7 @@ public class CLI {
      * 
      * @return the name of the city entered by the user
      */
-    public String searchAllHotels(){
+    public String searchAllHotels() {
         Scanner sc = new Scanner(System.in);
         String cityName = null;
         System.out.println(this.dash + "\n\tSEARCHING HOTEL IN A CITY \n" + this.dash);
@@ -169,11 +199,12 @@ public class CLI {
     }
 
     /**
-     * Prompts the user to enter a review for a hotel and returns the review details.
+     * Prompts the user to enter a review for a hotel and returns the review
+     * details.
      * 
      * @return an array containing the hotel name and the review object
      */
-    public Object[] insertReview(){
+    public Object[] insertReview() {
         Scanner sc = new Scanner(System.in);
         String hotelName = "";
         String cityName = "";
@@ -190,17 +221,17 @@ public class CLI {
         // todo - get the cit name
         System.out.println("City Name:");
         cityName = sc.nextLine();
-        
+
         // get the global rate
         System.out.println("Global Rate (can use decimal point number):");
-        while(!sc.hasNextDouble()) {
+        while (!sc.hasNextDouble()) {
             System.out.println("\tInsert the rate, re-tr!y");
         }
         rate = sc.nextDouble();
 
         // get the cleaning rate
         System.out.println("Cleaning Rate:");
-        while(!sc.hasNextInt()) {
+        while (!sc.hasNextInt()) {
             System.out.println("\tInsert the rate (integer), re-try!");
         }
         temp = sc.nextInt();
@@ -208,7 +239,7 @@ public class CLI {
 
         // get the position rate
         System.out.println("Position Rate:");
-        while(!sc.hasNextInt()) {
+        while (!sc.hasNextInt()) {
             System.out.println("\tInsert the rate (integer), re-try!");
         }
         temp = sc.nextInt();
@@ -216,7 +247,7 @@ public class CLI {
 
         // get the services rate
         System.out.println("Services Rate:");
-        while(!sc.hasNextInt()) {
+        while (!sc.hasNextInt()) {
             System.out.println("\tInsert the rate (integer), re-try!");
         }
         temp = sc.nextInt();
@@ -224,7 +255,7 @@ public class CLI {
 
         // get the quality rate
         System.out.println("Quality Rate:");
-        while(!sc.hasNextInt()) {
+        while (!sc.hasNextInt()) {
             System.out.println("\tInsert the rate (integer), re-try!");
         }
         temp = sc.nextInt();
@@ -239,7 +270,7 @@ public class CLI {
         res[0] = hotelName;
         res[1] = new Review(rate, ratings, date);
 
-        return res; 
+        return res;
     }
 
 }

@@ -14,7 +14,7 @@ public class ServerMain {
      */
     public static void main (String args[]) {
         // try-with-resources block to ensure the input stream is closed after use
-        try(InputStream input = Files.newInputStream(Paths.get("../../../config/serverConfig.properties"))) {
+        try(InputStream input = Files.newInputStream(Paths.get("config/serverConfig.properties"))) {
             Properties properties = new Properties();
             // load properties from conf file
             properties.load(input);

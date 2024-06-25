@@ -42,24 +42,30 @@ public class HOTELIERCustomerClient {
     private Map<Integer, String> op = new HashMap<Integer, String>();
 
     private Set<String> errors = new HashSet<String>();
-    // todo - attributes
 
     /**
      * The HOTELIERCustomerClient class represents a client for the HOTELIER customer system.
      * It provides functionality for managing user authentication and handling errors.
      */
+     @SuppressWarnings("deprecation") // todo - temp ignoring warning
     public HOTELIERCustomerClient(InetAddress tcpAddr, InetAddress udpAddr, Integer port, Integer multicastPort) throws IOException {
-        // todo - constructor
-        this.username = null;
-        this.logged = false;
-        this.selector = Selector.open();
-        this.socketChannel = SocketChannel.open();
-        this.socketChannel.connect(new InetSocketAddress(tcpAddr, port));
-        this.socketChannel.configureBlocking(false);
-        this.socketChannel.register(this.selector, 0);
-        this.notificator = new MulticastSocket(multicastPort);
-        this.notificator.joinGroup(udpAddr);
-        this.executorService = Executors.newSingleThreadExecutor();
+        try {
+            this.username = null;
+            this.logged = false;
+            // initialize the selector and the socket channel
+            this.selector = Selector.open();
+            this.socketChannel = SocketChannel.open();
+            this.socketChannel.connect(new InetSocketAddress(tcpAddr, port));
+            this.socketChannel.configureBlocking(false);
+            this.socketChannel.register(this.selector, 0);
+            // initialize the multicast socket
+            this.notificator = new MulticastSocket(multicastPort);
+            // join the multicast group
+            this.notificator.joinGroup(udpAddr);
+            this.executorService = Executors.newSingleThreadExecutor();
+        } catch (Exception e) {
+            // TODO: handle exception
+        }
         this.cli = new CLI();
         // todo - this.executorService.submit() - classe per ricevere notifiche sulla multicast socket
         
