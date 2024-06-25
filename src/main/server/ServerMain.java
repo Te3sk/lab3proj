@@ -1,5 +1,9 @@
-package main.server;
+// compile: javac -d bin -cp lib/*.jar src/main/dataModels/*.java src/main/server/*.java src/main/client/*.java
+// run: java -cp "bin;lib/*" main.server.ServerMain
+// compile and run: javac -d bin -cp lib/*.jar src/main/dataModels/*.java src/main/server/*.java src/main/client/*.java && java -cp "bin;lib/*" main.server.ServerMain
 
+
+package main.server;
 
 import java.util.Properties;
 import java.io.InputStream;

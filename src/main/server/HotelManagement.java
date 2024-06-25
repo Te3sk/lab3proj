@@ -1,5 +1,6 @@
 package main.server;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -14,7 +15,7 @@ public class HotelManagement {
     private String hotelPath;
     /** map as (key:hotel.id, value:Hotel) */
     private Map<String, Hotel> hotels;
-
+    private File hotelFile;
     private DataPersistence dataPersistence;
 
     /**

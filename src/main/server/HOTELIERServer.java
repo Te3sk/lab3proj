@@ -1,7 +1,3 @@
-// compile: javac -d bin -cp lib/*.jar src/main/dataModels/*.java src/main/server/*.java src/main/client/*.java
-// run: java -cp "bin;lib/*" main.server.HOTELIERServer
-// compile and run: javac -d bin -cp lib/*.jar src/main/dataModels/*.java src/main/server/*.java src/main/client/*.java && java -cp "bin;lib/*" main.server.HOTELIERServer
-
 package main.server;
 
 import java.io.IOException;
@@ -19,6 +15,7 @@ import java.util.Timer;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.io.File;
 
 public class HOTELIERServer implements Runnable {
     private long timeInterval;
@@ -59,7 +56,7 @@ public class HOTELIERServer implements Runnable {
         } catch (Exception e) {
             System.out.println("Error during server construction: " + e.getMessage());
         }
-    }
+    } 
 
     /**
      * start the server
@@ -73,7 +70,7 @@ public class HOTELIERServer implements Runnable {
             this.isRunning = true;
 
             // start broadcasting
-            timer.scheduleAtFixedRate(this.notificationService, this.timeInterval, this.tcpPort);
+            timer.scheduleAtFixedRate(this.notificationService, this.timeInterval, this.timeInterval);
             Scanner scanner = new Scanner(System.in);
             System.out.println("Press any key to stop the server...\n");
             // wait for shutdown request

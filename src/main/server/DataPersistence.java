@@ -1,5 +1,6 @@
 package main.server;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -22,7 +23,7 @@ public class DataPersistence {
 
     /**
      * Save user datas in a JSON file
-     * 
+     *
      * @param users the datas in this format (used in UserManagement)
      * @param filePath the path of the JSON file where you want to save the datas
      */
@@ -37,7 +38,7 @@ public class DataPersistence {
 
     /**
      * save hotels datas in a JSON file
-     * 
+     *
      * @param hotels the datas in this format (used in HotelManagement)
      * @param filePath the path of the JSON file where you want to save the datas
      */
@@ -51,17 +52,20 @@ public class DataPersistence {
 
     /**
      * load users datas from a JSON file
-     * 
+     *
      * @param filePath the path of the JSON file where you want to load the datas
-     * @return a mapping <username, user> with all the datas (same format of UserManagement) 
+     * @return a mapping <username, user> with all the datas (same format of UserManagement)
      */
     public Map<String, User> loadUsers(String filePath) {
         try {
             Map<String, User> users = new HashMap<String, User>();
             List<User> temp = new ArrayList<User>();
             temp = JsonUtil.deserializeListFromFile(filePath, User.class);
-            for (User user : temp) {
-                users.put(user.getUsername(), user);
+            // if the file is empty, means that there are no users already registered
+            if (temp != null) {
+                for (User user : temp) {
+                    users.put(user.getUsername(), user);
+                }
             }
             return users;
         } catch (Exception e) {
@@ -72,10 +76,10 @@ public class DataPersistence {
 
     /**
      * load hotels datas from a JSON file
-     * 
-     * 
+     *
+     *
      * @param filePath the path of the JSON file where you want to load the datas
-     * @return a mapping <hotelId, hotel> with all the datas (same format of HotelManagement) 
+     * @return a mapping <hotelId, hotel> with all the datas (same format of HotelManagement)
      */
     public Map<String, Hotel> loadHotels(String filePath) {
         try {
