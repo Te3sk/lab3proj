@@ -8,6 +8,7 @@ import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -34,6 +35,7 @@ import main.dataModels.Review;
 // wrong password - WRONGPSW
 // non existing hotel - HOTEL
 // non existing city - CITY
+// invalid format - FORMAT
 
 public class RequestHandler implements Runnable {
     private String type;
@@ -50,6 +52,7 @@ public class RequestHandler implements Runnable {
 
     private UserManagement userManagement;
     private HotelManagement hotelManagement;
+    private Set<String> errors = new HashSet<String>();
 
     // msg format
     // "_type:value_username:value_param1:StringParam1_param2:String|ReviewParam2_param3:StringParam3"
@@ -59,44 +62,58 @@ public class RequestHandler implements Runnable {
     public void run() {
         // TODO - temp debug print
         System.out.println("* DEBUG\tREQUEST HANDLER RUN METHOD");
-        while(isRunning){try {
-            // convert the message in a simple String
-            String msg = this.readAsString();
+        while (isRunning) {
+            try {
+                // convert the message in a simple String
+                String msg = "";
 
-            // TODO - temp debug print
-            System.out.println("* DEBUG\tnew message received: " + msg + " *");
-
-            // check validity of the message (parameters number)
-            int params = (int) msg.chars().filter(c -> c == '_').count();
-            if (params == 1 && msg.equals("_QUIT")) {
-                // TODO - check this quit msg (double check), maybe it's not necessary
-                // check if the message is a quit message
-                this.quit();
-            } else if (params < 3 || params > 6) {
-                // else check if the message has the right number of parameters
-                try {
-                    this.write("Error: invalid message format");
-                } catch (Exception e) {
-                    // ! Error message !
-                    System.out.println(e.getMessage());
+                // TODO - empty message from client, fix it in a better way
+                // after a successfully request the server recieves infinite empty messages,
+                // whitout this while cycle it became crazy and crashes
+                while (msg.isEmpty()) {
+                    msg = this.readAsString();
                 }
-            } else {
-                // if the message is VALID, dispatch it
+
                 // TODO - temp debug print
-                System.out.println("* DEBUG - \tmessage ok, dispatching... *");
-                this.dispatcher(msg);
+                System.out.println(
+                        "-----------------------------------------\n* DEBUG\tnew message received: >" + msg + "< *");
+
+                // check validity of the message (parameters number)
+                int params = (int) msg.chars().filter(c -> c == '_').count();
+                if (params == 1 && msg.equals("_QUIT")) {
+                    // TODO - check this quit msg (double check), maybe it's not necessary
+                    // check if the message is a quit message
+                    this.quit();
+                } else if (params < 2 || params > 6) {
+                    // else check if the message has the right number of parameters
+                    try {
+                        // TODO - temp debug print
+                        System.out.println("* DEBUG (run) - \tinvalid number of parameters (" + params
+                                + ")\n\tmessage: >" + msg + "<");
+
+                        this.write("FORMAT");
+                    } catch (Exception e) {
+                        // ! Error message !
+                        System.out.println(e.getMessage());
+                    }
+                } else {
+                    // if the message is VALID, dispatch it
+                    // TODO - temp debug print
+                    System.out.println("* DEBUG - \tmessage ok, dispatching... *");
+                    this.dispatcher(msg);
+                }
+            } catch (ClosedChannelException e) {
+                // handle if the channel is closed (and print a msg)
+                this.quit();
+                // * Log message *
+                System.out.println("A client close the connection.");
+            } catch (IOException e) {
+                // set the focus on read operation
+                this.callerAddress.keyFor(this.selector).interestOps(SelectionKey.OP_READ);
+                // ! Error message !
+                System.out.println(e.getMessage());
             }
-        } catch (ClosedChannelException e) {
-            // handle if the channel is closed (and print a msg)
-            this.quit();
-            // * Log message *
-            System.out.println("A client close the connection.");
-        } catch (IOException e) {
-            // set the focus on read operation
-            this.callerAddress.keyFor(this.selector).interestOps(SelectionKey.OP_READ);
-            // ! Error message !
-            System.out.println(e.getMessage());
-        }}
+        }
 
         // TODO - temp debug print
         System.out.println("* DEBUG - \tFINE DI QUESTO RUN METHOD\n--------------------------");
@@ -136,8 +153,12 @@ public class RequestHandler implements Runnable {
             if (parts.length >= 6) {
                 // TODO - temp debug print
                 System.out.println("* DEBUG - \tinvalid number of parameters (" + parts.length + ")");
+                for (String p : parts) {
+                    System.out.println("\t* DEBUG - \t" + p);
+                }
+
                 try {
-                    this.write("Error: invalid message format (too many parameters: " + parts.length + ")");
+                    this.write("FORMAT");
                 } catch (Exception e) {
                     // ! Error message !
                     System.out.println(e.getMessage());
@@ -155,7 +176,7 @@ public class RequestHandler implements Runnable {
                         for (int i = 0; i < parts.length; i++) {
                             System.out.println("\tparameter " + Integer.toString(i) + "- " + parts[i]);
                         }
-                        
+
                         this.signIn(parts[0], this.callerAddress, parts[2], parts[3]);
                         break;
                     case "LOGIN":
@@ -225,6 +246,16 @@ public class RequestHandler implements Runnable {
         this.hotelManagement = hotelManagement;
         this.callerAddress = socketChannel;
         this.selector = selector;
+
+        // set error messages
+        this.errors.add("USERN_Y");
+        this.errors.add("USERN_N");
+        this.errors.add("EMPTYF");
+        this.errors.add("WRONGPSW");
+        this.errors.add("HOTEL");
+        this.errors.add("CITY");
+        // TODO
+        this.errors.add("FORMAT");
     }
 
     // HANDLING METHODS
@@ -527,8 +558,6 @@ public class RequestHandler implements Runnable {
             while (buffer.hasRemaining()) {
                 // write the buffer to the callerAddress and print the number of byte
                 int byteNumber = this.callerAddress.write(buffer);
-                // TODO - temp debug print
-                System.out.println("* DEBUG - \t" + byteNumber + " bytes written *");
             }
         }
         mySelector.close();

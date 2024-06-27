@@ -68,14 +68,14 @@ public class HOTELIERCustomerClient {
             this.socketChannel.configureBlocking(false);
             // register the socket channel with the selector
             this.socketChannel.register(this.selector, 0);
-            
+
             if (this.isConnect == false) {
                 // * Log message *
                 throw new Exception("Connection with the server failed");
             } else {
                 // * Log message *
                 System.out.println("Connection successful\n");
-                
+
                 // initialize the multicast socket
                 this.notificator = new MulticastSocket(multicastPort);
                 // join the multicast group
@@ -93,7 +93,7 @@ public class HOTELIERCustomerClient {
             this.cli = new CLI();
             // TODO - this.executorService.submit() - classe per ricevere notifiche sulla
             // multicast socket
-    
+
             // set error messages
             this.errors.add("USERN_Y");
             this.errors.add("USERN_N");
@@ -101,7 +101,9 @@ public class HOTELIERCustomerClient {
             this.errors.add("WRONGPSW");
             this.errors.add("HOTEL");
             this.errors.add("CITY");
-    
+            // TODO
+            this.errors.add("FORMAT");
+
             // set operations map
             this.op.put(1, "SIGNIN");
             this.op.put(2, "LOGIN");
@@ -199,24 +201,28 @@ public class HOTELIERCustomerClient {
 
     /**
      * Handles the user interaction in the HOTELIER customer client.
-     * This method allows the user to perform various actions based on the selected option.
-     * The user can register, login, search for hotels, view all hotels, write reviews, and logout.
+     * This method allows the user to perform various actions based on the selected
+     * option.
+     * The user can register, login, search for hotels, view all hotels, write
+     * reviews, and logout.
      * 
-     * @throws Exception if an error occurs during the execution of the selected action.
+     * @throws Exception if an error occurs during the execution of the selected
+     *                   action.
      */
     protected void handleUser() {
-        int n = -1;
 
-        // // TODO - temp debug print
-        // System.out.println("* DEBUG - \t (HOTELIERCustomerClient.isConnect = " +
-        // this.isConnect + ")");
-        if (this.logged) {
-            n = this.cli.homePage(this.username);
-        } else {
-            n = this.cli.homePage(null);
-        }
+        // TODO - temp debug print
+        System.out.println("* DEBUG (handleUser)- \tbefore while");
 
         while (this.isConnect) {
+            int n = -1;
+
+            if (this.logged) {
+                n = this.cli.homePage(this.username);
+            } else {
+                n = this.cli.homePage(null);
+            }
+
             String[] param = null;
             String city = null;
             Object[] param2 = null;
@@ -266,7 +272,10 @@ public class HOTELIERCustomerClient {
                         System.out.println(e.getMessage());
                     }
                 case 7:
-                    // logout
+                    // TODO - temp debug print
+                    System.out.println("* DEBUG - \tLOGOUT CASE");
+                    this.logout(this.username);
+                    break;
                 case 8:
                     this.quit();
                     break;
@@ -340,7 +349,7 @@ public class HOTELIERCustomerClient {
     protected void write(String message) throws IOException {
         // set the channel interest for writing operation
         // TODO - temp debug print
-        System.out.println("*DEBUG\tmsg to print: " + message);
+        System.out.println("*DEBUG (CustomerClient.write)\tmsg to print: " + message);
 
         SelectionKey key = this.socketChannel.keyFor(selector);
         if (key == null) {
@@ -348,20 +357,20 @@ public class HOTELIERCustomerClient {
             return; // exit from the method if the channel is not registered or closed
         }
         // TODO - temp debug print
-        System.out.println("*DEBUG\tselection key ok (not null)");
+        System.out.println("*DEBUG (CustomerClient.write)\tselection key ok (not null)");
 
         key.interestOps(SelectionKey.OP_WRITE);
         // socketChannel.keyFor(selector).interestOps(SelectionKey.OP_WRITE);
 
         // TODO - temp debug print
-        System.out.println("*DEBUG\twait for ready selection...");
+        System.out.println("*DEBUG (CustomerClient.write)\twait for ready selection...");
 
         // wait untill there are ready selection
         while (this.selector.select() == 0) {
         }
 
         // TODO - temp debug print
-        System.out.println("*DEBUG\tready selection found");
+        System.out.println("*DEBUG (CustomerClient.write)\tready selection found");
 
         // get the key set of the ready selections
         Set<SelectionKey> keys = this.selector.selectedKeys();
@@ -382,7 +391,8 @@ public class HOTELIERCustomerClient {
         int numChunks = (int) Math.ceil((double) messageBytes.length / 1024);
 
         // TODO - temp debug print
-        System.out.println("*DEBUG\tmessage converted in bytes and divided in chunks\n\t\t sending them...");
+        System.out.println(
+                "*DEBUG (CustomerClient.write)\tmessage converted in bytes and divided in chunks\n\t\t sending them...");
 
         // Cycle to send every block (1024)
         for (int i = 0; i < numChunks; i++) {
@@ -402,7 +412,7 @@ public class HOTELIERCustomerClient {
         }
 
         // TODO - temp debug print
-        System.out.println("*DEBUG\tmessage wrote on the socket channel");
+        System.out.println("*DEBUG (CustomerClient.write)\tmessage wrote on the socket channel");
 
         // reset the interesting option for no operation
         socketChannel.keyFor(selector).interestOps(0);
@@ -488,17 +498,33 @@ public class HOTELIERCustomerClient {
      * 
      * @param username
      */
-    public void logout(String username) throws Exception {
+    public void logout(String username) {
+        // TODO - temp debug print
+        System.out.println("* DEBUG (CustomerClient.logout)\tlogout method called");
+
         String req = "LOGOUT_" + this.socketChannel + "_" + this.username;
+        String response = "";
 
-        this.write(req);
+        try {
+            this.write(req);
+            response = this.readAsString();
+        } catch (IOException e) {
+            System.out.println("IOError during logout: " + e.getMessage());
+        } catch (Exception e) {
+            System.out.println("Unexpected error during logout: " + e.getMessage());
+        }
 
-        String response = this.readAsString();
+        // TODO - temp debug print
+        System.out.println("* DEBUG (CustomerClient.logout)- \tresponse: " + response);
 
         if (!this.errors.contains(response)) {
+            // TODO - temp debug print
+            System.out.println("* DEBUG (CustomerClient.logout)- \tno error finded in response\n\t" + response);
             this.logged = false;
             this.username = null;
         } else {
+            // TODO - temp debug print
+            System.out.println("* DEBUG (CustomerClient.logout)- \terror finded in response\n\t" + response);
             if (response.equals("USERN_N")) {
                 System.out.println("Error: username not found");
             } else {
