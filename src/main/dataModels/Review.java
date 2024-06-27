@@ -110,23 +110,27 @@ public class Review {
     @Override
     public String toString() {
         String res = new String();
-        res += "rate:"+ Double.toString(this.rate) + "_ratings:{";
+        res += "rate:"+ Double.toString(this.rate) + ";ratings:{";
 
         for (String key : this.ratings.keySet()) {
             res += key + ":" + Integer.toString(this.ratings.get(key)) + ",";
         }
 
-        res += "}_date:" + this.date.toString();
+        res += "};date:" + this.date.toString();
 
         return res;        
     }
 
     public static Review fromString(String str) throws ParseException {
+        // TODO - fix this methods (fromString)
         Double rate = 0.0;
         Map<String, Integer> ratings = new HashMap<>();
         Date date = new Date();
+
+        // TODO - temp debug print
+        System.out.println("* DEBUG - \tReview.fromString - str >" + str + "<");
         
-        String[] parts = str.split("_");
+        String[] parts = str.split(";");
         for (String part : parts) {
             String[] keyValue = part.split(":");
             String key = keyValue[0];

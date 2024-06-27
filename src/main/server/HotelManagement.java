@@ -35,14 +35,14 @@ public class HotelManagement {
      * @param city      name of the city that contains the hotel
      * @return an Hotel obj with all the info required
      * @throws EMPTYF if a parameter is empty/null
-     * @throws CITY if can't find the city
-     * @throws HOTEL if can't find the hotel
+     * @throws CITY   if can't find the city
+     * @throws HOTEL  if can't find the hotel
      */
     public Hotel searchHotel(String hotelName, String city) throws Exception {
         if (hotelName == null || hotelName.isEmpty() || city == null || city.isEmpty()) {
             throw new Exception("EMPTYF");
         }
-        
+
         if (!Capitals.isValidCapital(city)) {
             throw new Exception("CITY");
         }
@@ -93,8 +93,8 @@ public class HotelManagement {
     }
 
     /**
-    * @return hotels parameter
-    */
+     * @return hotels parameter
+     */
     public Map<String, Hotel> getHotels() {
         return hotels;
     }
@@ -106,7 +106,7 @@ public class HotelManagement {
      * @param nomeCittà city of the hotel
      * @param review    the review (obj) you want to add
      */
-    public void addReview(String nomeHotel, String nomeCittà, Review review) throws Exception{
+    public void addReview(String nomeHotel, String nomeCittà, Review review) throws Exception {
         // check if hotel exists and find it
         String currentId = "empty";
 
@@ -122,7 +122,7 @@ public class HotelManagement {
         }
 
         // todo - capire se così va bene, se current punta allo stesso indirizzo di
-        // todo - quello nella lista quindi cambia automaticamente o se va aggiornato
+        // todo - quello nella lista (quindi cambia automaticamente) o se va aggiornato
         // todo - quello nella lista
         Hotel current = this.hotels.get(currentId);
         // add the review in the list reviews
@@ -259,7 +259,7 @@ public class HotelManagement {
                         + ((recentWeight / maxRecentWeight) * 0.2);
                 rankValues.put(hotel.getId(), rankValue);
             }
-            
+
             // sort by rank value
             cityHotels.sort((hotel1, hotel2) -> {
                 Double rank1 = rankValues.get(hotel1.getId());
@@ -277,10 +277,11 @@ public class HotelManagement {
     }
 
     /**
-     * @return a map <key:city, value:hotelId> that associated a city with the most high rank hotel
+     * @return a map <key:city, value:hotelId> that associated a city with the most
+     *         high rank hotel
      */
     public Map<String, String> firstLocalHotels() {
-        // this list will contain all the first local Hotel ids 
+        // this list will contain all the first local Hotel ids
         Map<String, String> hotelsId = new HashMap<String, String>();
         Map<String, List<Hotel>> hotelByCity = this.groupByCity();
         for (String city : hotelByCity.keySet()) {
@@ -294,7 +295,7 @@ public class HotelManagement {
         }
 
         return hotelsId;
-    } 
+    }
 
     /**
      * take the Map<String, Hotel> hotels (attribute) and gruop them by city
@@ -341,7 +342,7 @@ public class HotelManagement {
     /**
      * save the hotels infos in the JSON file
      */
-    public void saveHotel () {
+    public void saveHotel() {
         List<Hotel> temp = new ArrayList<Hotel>(this.hotels.values());
         dataPersistence.saveHotels(temp, this.hotelPath);
     }

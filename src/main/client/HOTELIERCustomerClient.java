@@ -135,68 +135,6 @@ public class HOTELIERCustomerClient {
         }
 
         this.handleUser();
-
-        // ! CODE BELOW TRANFERED TO handleUser() !
-        // // int n = -1;
-        // // n = this.cli.homePage(null);
-        // // while (true) {
-        // // String[] param = null;
-        // // String city = null;
-        // // Object[] param2 = null;
-        // // switch (n) {
-        // // // signin
-        // // case 1:
-        // // String[] creds = this.cli.insertCred();
-        // // try {
-        // // this.register(creds[0], creds[1]);
-        // // } catch (Exception e) {
-        // // System.out.println("Error during registration: " + e.getMessage());
-        // // }
-        // // break;
-        // // // login
-        // // case 2:
-        // // param = this.cli.insertCred();
-        // // try {
-        // // this.login(param[0], param[1]);
-        // // } catch (Exception e) {
-        // // System.out.println(e.getMessage());
-        // // }
-        // // break;
-        // // // hotel
-        // // case 3:
-        // // param = this.cli.searchHotel();
-        // // try {
-        // // this.searchHotel(param[0], param[1]);
-        // // } catch (Exception e) {
-        // // System.out.println(e.getMessage());
-        // // }
-        // // break;
-        // // // all hotel
-        // // case 4:
-        // // city = this.cli.searchAllHotels();
-        // // try {
-        // // this.searchAllHotels(city);
-        // // } catch (Exception e) {
-        // // System.out.println(e.getMessage());
-        // // }
-        // // break;
-        // // // review
-        // // case 5:
-        // // // TODO - check if the Object[].. stuff work
-        // // param2 = this.cli.insertReview();
-        // // try {
-        // // // this.ins
-        // // } catch (Exception e) {
-        // // System.out.println(e.getMessage());
-        // // }
-        // // case 7:
-        // // // logout
-        // // case 8:
-        // // // quit
-        // // default:
-        // // break;
-        // // }
-        // // }
     }
 
     /**
@@ -229,55 +167,86 @@ public class HOTELIERCustomerClient {
             switch (n) {
                 // signin
                 case 1:
+                    // TODO - temp debug print
+                    System.out.println("* DEBUG (handleUser) - \tREGISTRATION CASE");
                     String[] creds = this.cli.insertCred("REGISTRATION");
                     try {
                         this.register(creds[0], creds[1]);
                     } catch (Exception e) {
                         System.out.println("Error during registration: " + e.getMessage());
                     }
+                    // TODO - temp debug print
+                    System.out.println("* DEBUG (handleUser) - \tEND OF REGISTRATION CASE");
                     break;
                 // login
                 case 2:
+                    // TODO - temp debug print
+                    System.out.println("* DEBUG (handleUser) - \tLOGIN CASE");
                     param = this.cli.insertCred("LOGIN");
                     try {
                         this.login(param[0], param[1]);
                     } catch (Exception e) {
                         System.out.println(e.getMessage());
                     }
+                    // TODO - temp debug print
+                    System.out.println("* DEBUG (handleUser) - \tEND OF LOGIN CASE");
                     break;
                 // hotel
                 case 3:
+                    // TODO - temp debug print
+                    System.out.println("* DEBUG (handleUser) - \tSEARCH HOTEL CASE");
                     param = this.cli.searchHotel();
                     try {
                         this.searchHotel(param[0], param[1]);
                     } catch (Exception e) {
                         System.out.println(e.getMessage());
                     }
+                    // TODO - temp debug print
+                    System.out.println("* DEBUG (handleUser) - \tEND OF SEARCH HOTEL CASE");
                     break;
                 // all hotel
                 case 4:
+                    // TODO - temp debug print
+                    System.out.println("* DEBUG (handleUser) - \tSEARCHA HOTEL (CITY)");
                     city = this.cli.searchAllHotels();
                     try {
                         this.searchAllHotels(city);
                     } catch (Exception e) {
                         System.out.println(e.getMessage());
                     }
+                    // TODO - temp debug print
+                    System.out.println("* DEBUG (handleUser) - \tEND OF SEARCH ALL HOTELS CASE");
                     break;
                 // review
                 case 5:
+                    // TODO - temp debug print
+                    System.out.println("* DEBUG (handleUser) - \tREVIEW CASE");
                     param2 = this.cli.insertReview();
                     try {
+                        this.insertReview((String)param2[0], (String)param2[1], (Review)param2[2]);
                         // TODO - this.insertReview
                     } catch (Exception e) {
                         System.out.println(e.getMessage());
                     }
+                    // TODO - temp debug print
+                    System.out.println("* DEBUG (handleUser) - \tEND OF REVIEW CASE");
+                    break;
+                case 6:
+                    // TODO - show badges handling
+                    break;
                 case 7:
                     // TODO - temp debug print
-                    System.out.println("* DEBUG - \tLOGOUT CASE");
+                    System.out.println("* DEBUG (handleUser) - \tLOGOUT CASE");
                     this.logout(this.username);
+                    // TODO - temp debug print
+                    System.out.println("* DEBUG (handleUser) - \tEND OF LOGOUT CASE");
                     break;
                 case 8:
+                    // TODO - temp debug print
+                    System.out.println("* DEBUG (handleUser) - \tQUIT CASE");
                     this.quit();
+                    // TODO - temp debug print
+                    System.out.println("* DEBUG (handleUser) - \tEND OF QUIT CASE");
                     break;
                 default:
                     break;
@@ -417,6 +386,8 @@ public class HOTELIERCustomerClient {
         // reset the interesting option for no operation
         socketChannel.keyFor(selector).interestOps(0);
     }
+
+    // OPERATION METHODS
 
     /**
      * register a new user
@@ -622,13 +593,18 @@ public class HOTELIERCustomerClient {
      */
     public void insertReview(String hotel, String città, Review review)
             throws Exception {
-        String req = "REVIEW_" + this.socketChannel + "_" + this.username + "_" + hotel + "_" + città + "_"
-                + Double.toString(review.getRate()) + "_";
+        // String req = "REVIEW_" + this.socketChannel + "_" + this.username + "_" + hotel + "_" + città + "_"
+        //         + Double.toString(review.getRate()) + "_";
 
-        Map<String, Integer> ratings = review.getRatings();
-        for (String key : ratings.keySet()) {
-            req += key + ":" + Integer.toString(ratings.get(key)) + ",";
-        }
+        // Map<String, Integer> ratings = review.getRatings();
+        // for (String key : ratings.keySet()) {
+        //     req += key + ":" + Integer.toString(ratings.get(key)) + ",";
+        // }
+        
+        String req = "REVIEW_" + this.socketChannel + "_" + this.username + "_" + hotel + "_" + città + "_" + review.toString();
+
+        // TODO - temp debug print
+        System.out.println("* DEBUG - \tsending request:\n\t" + req);
 
         this.write(req);
 

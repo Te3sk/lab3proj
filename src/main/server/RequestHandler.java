@@ -130,12 +130,12 @@ public class RequestHandler implements Runnable {
         System.out.println("* DEBUG - \tDISPATCHER...");
         String[] parts = msg.split("_");
         // TODO - temp debug print
-        System.out.println("* DEBUG - \tPARTS PARTS of message (" + msg + "):");
+        System.out.println("* DEBUG  (dispatcher) - \tPARTS PARTS of message (" + msg + "):");
         if (parts.length == 0) {
-            System.out.println("* DEBUG - \tNO PARTS");
+            System.out.println("* DEBUG  (dispatcher) - \tNO PARTS");
         } else {
             for (String part : parts) {
-                System.out.println("\t* DEBUG - \t" + part);
+                System.out.println("\t* DEBUG  (dispatcher) - \t" + part);
             }
         }
 
@@ -146,13 +146,13 @@ public class RequestHandler implements Runnable {
         }
 
         // TODO - temp debug print
-        System.out.println("* DEBUG - \tparts size: " + (parts.length));
+        System.out.println("* DEBUG  (dispatcher) - \tparts size: " + (parts.length));
 
         // check if the message has the right number of parameters
         try {
-            if (parts.length >= 6) {
+            if (parts.length > 6) {
                 // TODO - temp debug print
-                System.out.println("* DEBUG - \tinvalid number of parameters (" + parts.length + ")");
+                System.out.println("* DEBUG  (dispatcher) - \tinvalid number of parameters (" + parts.length + ")");
                 for (String p : parts) {
                     System.out.println("\t* DEBUG - \t" + p);
                 }
@@ -165,17 +165,18 @@ public class RequestHandler implements Runnable {
                 }
             } else {
                 // TODO - temp debug print
-                System.out.println("* DEBUG - \tright number of parameters, type: " + parts[0] + " *");
+                System.out.println("* DEBUG  (dispatcher) - \tright number of parameters, type: " + parts[0] + " *");
                 // check the type of the request and call the appropriate method
 
                 switch (parts[0]) {
                     case "SIGNIN":
                         // TODO - temp debug print
-                        System.out.println("--------------------------\n* DEBUG - \tSIGNIN CASE *\n\t" + msg);
+                        System.out.println("--------------------------\n* DEBUG  (dispatcher) - \tSIGNIN CASE *\n\t" + msg);
                         System.out.println("\t" + parts.length + " parameters");
                         for (int i = 0; i < parts.length; i++) {
                             System.out.println("\tparameter " + Integer.toString(i) + "- " + parts[i]);
                         }
+                        System.out.println("* DEBUG (dispatcher) - start dispatching");
 
                         this.signIn(parts[0], this.callerAddress, parts[2], parts[3]);
                         break;
@@ -195,6 +196,8 @@ public class RequestHandler implements Runnable {
                                 parts[3]);
                         break;
                     case "REVIEW":
+                        // TODO - temp debug print
+                        System.out.println("* DEBUG (dispatcher) - \tREVIEW CASE");
                         try {
                             this.insertReview(parts[0], this.callerAddress, parts[2],
                                     parts[3], parts[4], Review.fromString(parts[5]));
@@ -216,6 +219,7 @@ public class RequestHandler implements Runnable {
                             // ! Error message !
                             System.out.println(e.getMessage());
                         }
+                    break;
                 }
             }
         } catch (Exception e) {
@@ -455,8 +459,13 @@ public class RequestHandler implements Runnable {
         this.cityName = cityName;
         this.review = review;
 
+        // TODO - temp debug print
+        System.out.println("* DEBUG (insertReview)- \t review:\n\t" + this.review.toString());
+
         try {
             hotelManagement.addReview(this.getHotelName(), this.getCityName(), this.getReview());
+            // TODO - temp debug print
+            System.out.println("* DEBUG - \t Review added correctly.");
             this.write("Review added correctly.");
         } catch (IOException e) {
             // ! Error message !

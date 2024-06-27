@@ -204,51 +204,67 @@ public class CLI {
         cityName = this.sc.nextLine();
 
         // get the global rate
-        System.out.println("Global Rate (can use decimal point number):");
-        while (!sc.hasNextDouble()) {
-            System.out.println("\tInsert the rate, re-tr!y");
+        while (rate < 0.0 || rate > 5.0) {
+            System.out.println("Global Rate (between 0.0 and 5.0 - can use decimal point number):");
+            rate = this.sc.nextDouble();
+            // clear the buffer
+            this.sc.nextLine();
         }
-        rate = this.sc.nextDouble();
+
+        // TODO - temp debug print
+        System.out.println("* DEBUG - \tglobale rate: " + rate);
 
         // get the cleaning rate
-        System.out.println("Cleaning Rate:");
-        while (!this.sc.hasNextInt()) {
-            System.out.println("\tInsert the rate (integer), re-try!");
+        while (temp < 0 || temp > 5) {
+            System.out.println("Cleaning Rate (between 0 and 5 - integer):");
+            temp = this.sc.nextInt();
+            // clear the buffer
+            this.sc.nextLine();
         }
-        temp = this.sc.nextInt();
         ratings.put("cleaning", temp);
+        temp = -1;
+
+        // TODO - temp debug print
+        System.out.println("* DEBUG - \tcleaning rate: " + temp);
 
         // get the position rate
-        System.out.println("Position Rate:");
-        while (!this.sc.hasNextInt()) {
-            System.out.println("\tInsert the rate (integer), re-try!");
+        while (temp < 0 || temp > 5) {
+            System.out.println("Position Rate (between 0 and 5 - integer):");
+            temp = this.sc.nextInt();
+            // clear the buffer
+            this.sc.nextLine();
         }
-        temp = this.sc.nextInt();
         ratings.put("position", temp);
+        temp = -1;
 
         // get the services rate
-        System.out.println("Services Rate:");
-        while (!this.sc.hasNextInt()) {
-            System.out.println("\tInsert the rate (integer), re-try!");
+        while (temp < 0 || temp > 5) {
+            System.out.println("Services Rate (between 0 and 5 - integer):");
+            temp = this.sc.nextInt();
+            // clear the buffer
+            this.sc.nextLine();
         }
-        temp = this.sc.nextInt();
         ratings.put("services", temp);
+        temp = -1;
 
         // get the quality rate
-        System.out.println("Quality Rate:");
-        while (!this.sc.hasNextInt()) {
-            System.out.println("\tInsert the rate (integer), re-try!");
+        while (temp < 0 || temp > 5) {
+            System.out.println("Quality Rate (between 0 and 5 - integer):");
+            temp = this.sc.nextInt();
+            // clear the buffer
+            this.sc.nextLine();
         }
-        temp = this.sc.nextInt();
         ratings.put("quality", temp);
+        temp = -1;
 
         // compute the date
         Date date = new Date();
 
         // todo - add city parameter
-        Object[] res = new Object[2];
+        Object[] res = new Object[3];
         res[0] = hotelName;
-        res[1] = new Review(rate, ratings, date);
+        res[1] = cityName;
+        res[2] = new Review(rate, ratings, date);
 
         return res;
     }
