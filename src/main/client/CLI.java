@@ -112,9 +112,8 @@ public class CLI {
 
         System.out.println(this.dash + "\n\t" + title + "\n" + this.dash);
 
-        // TODO - the first time is ok with this, since the second have to enter a line
-        // before the program print "Username"
-
+        // TODO - buffer cleaning
+        // whitout it the first input is skipped
         this.sc.nextLine();
 
         System.out.println("Username:");
@@ -142,12 +141,14 @@ public class CLI {
         String cityName = null;
         System.out.println(this.dash + "\n\tSEARCHING HOTEL (by name and city)\n" + this.dash);
 
-        System.out.println("Hotel Name:");
-        hotelName = sc.nextLine();
-        System.out.println("City Name:");
-        cityName = sc.nextLine();
+        // TODO - buffer cleaning
+        // whitout it the first input is skipped
+        this.sc.nextLine();
 
-        // // sc.close();
+        System.out.println("Hotel Name:");
+        hotelName = this.sc.nextLine();
+        System.out.println("City Name:");
+        cityName = this.sc.nextLine();
 
         String[] res = new String[2];
         res[0] = hotelName;
@@ -161,14 +162,15 @@ public class CLI {
      * @return the name of the city entered by the user
      */
     public String searchAllHotels() {
-        Scanner sc = new Scanner(System.in);
         String cityName = null;
         System.out.println(this.dash + "\n\tSEARCHING HOTEL IN A CITY \n" + this.dash);
 
-        System.out.println("City Name:");
-        cityName = sc.nextLine();
+        // TODO - buffer cleaning
+        // whitout it the first input is skipped
+        this.sc.nextLine();
 
-        // // sc.close();
+        System.out.println("City Name:");
+        cityName = this.sc.nextLine();
 
         return cityName;
     }
@@ -189,57 +191,61 @@ public class CLI {
 
         System.out.println(this.dash + "\n\tINSERT REVIEW\n" + this.dash);
 
+        // TODO - buffer cleaning
+        // whitout it the first input is skipped
+        this.sc.nextLine();
+
         // get the hotel name
         System.out.println("Hotel Name:");
-        hotelName = sc.nextLine();
+        hotelName = this.sc.nextLine();
 
+        // get the city name
         System.out.println("City Name:");
-        cityName = sc.nextLine();
+        cityName = this.sc.nextLine();
 
         // get the global rate
         System.out.println("Global Rate (can use decimal point number):");
         while (!sc.hasNextDouble()) {
             System.out.println("\tInsert the rate, re-tr!y");
         }
-        rate = sc.nextDouble();
+        rate = this.sc.nextDouble();
 
         // get the cleaning rate
         System.out.println("Cleaning Rate:");
-        while (!sc.hasNextInt()) {
+        while (!this.sc.hasNextInt()) {
             System.out.println("\tInsert the rate (integer), re-try!");
         }
-        temp = sc.nextInt();
+        temp = this.sc.nextInt();
         ratings.put("cleaning", temp);
 
         // get the position rate
         System.out.println("Position Rate:");
-        while (!sc.hasNextInt()) {
+        while (!this.sc.hasNextInt()) {
             System.out.println("\tInsert the rate (integer), re-try!");
         }
-        temp = sc.nextInt();
+        temp = this.sc.nextInt();
         ratings.put("position", temp);
 
         // get the services rate
         System.out.println("Services Rate:");
-        while (!sc.hasNextInt()) {
+        while (!this.sc.hasNextInt()) {
             System.out.println("\tInsert the rate (integer), re-try!");
         }
-        temp = sc.nextInt();
+        temp = this.sc.nextInt();
         ratings.put("services", temp);
 
         // get the quality rate
         System.out.println("Quality Rate:");
-        while (!sc.hasNextInt()) {
+        while (!this.sc.hasNextInt()) {
             System.out.println("\tInsert the rate (integer), re-try!");
         }
-        temp = sc.nextInt();
+        temp = this.sc.nextInt();
         ratings.put("quality", temp);
 
         // compute the date
         Date date = new Date();
 
-        // // sc.close();
-
+        // todo - add city parameter
         Object[] res = new Object[2];
         res[0] = hotelName;
         res[1] = new Review(rate, ratings, date);

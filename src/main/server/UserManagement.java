@@ -52,6 +52,9 @@ public class UserManagement {
         // save new user datas
         User newUser = new User(username, psw);
         this.users.put(newUser.getUsername(), newUser);
+
+        // update json file
+        this.dataPersistence.saveUsers(this.users, this.dataFilePath);
     }
 
     /**

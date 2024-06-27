@@ -68,39 +68,6 @@ public class HOTELIERServer implements Runnable {
         }
     }
 
-    // // /**
-    // // * start the server
-    // // */
-    // // public void start() {
-    // // try {
-    // // // start listening
-    // // Thread listener = new Thread(this);
-    // // listener.start();
-    // // Timer timer = new Timer();
-    // // this.isRunning = true;
-    // // // start broadcasting
-    // // timer.scheduleAtFixedRate(this.notificationService, this.timeInterval,
-    // this.timeInterval);
-    // // Scanner scanner = new Scanner(System.in);
-    // // System.out.println("Press any key to stop the server...\n");
-    // // // wait for shutdown request
-    // // scanner.nextLine();
-    // // // shutdown
-    // // System.out.println("shouting down the server...");
-    // // scanner.close();
-    // // this.serverSocketChannel.close();
-    // // listener.interrupt();
-    // // this.notificationService.close();
-    // // timer.cancel();
-    // // this.selector.close();
-    // // this.hotelManagement.saveHotel();
-    // // this.userManagement.saveUsers();
-    // // this.isRunning = false;
-    // // } catch (Exception e) {
-    // // System.out.println("Error during server start: " + e.getMessage());
-    // // }
-    // // }
-
     /**
      * Fetches the appropriate RequestHandler based on the given SocketChannel.
      * 

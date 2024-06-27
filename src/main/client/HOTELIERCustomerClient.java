@@ -564,6 +564,14 @@ public class HOTELIERCustomerClient {
                     break;
             }
         }
+
+        // * Log message *
+        System.out.println("\nPress enter to continue...");
+        try {
+            System.in.read();
+        } catch (IOException e) {
+            System.out.println("Error during waiting for user input: " + e.getMessage());
+        }
     }
 
     /**
@@ -572,6 +580,8 @@ public class HOTELIERCustomerClient {
      * @param città
      */
     public void searchAllHotels(String città) throws Exception {
+        // TODO - temp debug print
+        System.out.println("* DEBUG - \tENTER IN SEARCHALLHOTELS ------------");
         String req = "ALLHOTEL_" + this.socketChannel + "_" + this.username + "_" + città;
 
         this.write(req);
@@ -591,6 +601,14 @@ public class HOTELIERCustomerClient {
                     System.out.println(response);
                     break;
             }
+        }
+
+        // * Log message *
+        System.out.println("\nPress enter to continue...");
+        try {
+            System.in.read();
+        } catch (IOException e) {
+            System.out.println("Error during waiting for user input: " + e.getMessage());
         }
     }
 

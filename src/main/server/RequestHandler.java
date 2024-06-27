@@ -416,11 +416,17 @@ public class RequestHandler implements Runnable {
         this.cityName = cityName;
         this.review = null;
 
+        String response = "";
+
         try {
             List<Hotel> hotels = hotelManagement.searchHotelByCity(this.getCityName());
+            
             for (Hotel hotel : hotels) {
-                this.write(hotel.toString() + "\n-------------------\n");
+                
+                response += (hotel.toString() + "\n-------------------\n");
             }
+
+            this.write(response);
         } catch (Exception e) {
             try {
                 this.write(e.getMessage());

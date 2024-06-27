@@ -1,6 +1,7 @@
 package main.server;
 
-import java.io.File;
+// import java.io.File;
+// import java.lang.runtime.TemplateRuntime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -25,17 +26,6 @@ public class HotelManagement {
         this.hotelPath = hotelPath;
         this.dataPersistence = new DataPersistence();
         this.hotels = dataPersistence.loadHotels(hotelPath);
-        // todo - temp test
-        // this.deserializationTest();
-    }
-
-    // todo - temp test
-    private void deserializationTest() {
-        System.out.println("---------------------\nDeserialization test (begin) \n---------------------");
-        for (Hotel hotel : this.hotels.values()) {
-            System.out.println(hotel.toString());
-        }
-        System.out.println("---------------------\nDeserialization test (end) \n---------------------");
     }
 
     /**
@@ -74,9 +64,15 @@ public class HotelManagement {
      *         found
      */
     public List<Hotel> searchHotelByCity(String city) throws Exception {
+        // TODO - temp debug print
+        System.out.println("* DEBUG - \tENTER IN SEARCHHOTELBYCITY");
+
         if (!Capitals.isValidCapital(city)) {
             throw new Exception("CITY");
         }
+
+        // TODO - temp debug print
+        System.out.println("* DEBUG - \t\tvalid city (" + city + ")");
 
         List<Hotel> hotelInCity = new ArrayList<Hotel>();
 
@@ -85,6 +81,9 @@ public class HotelManagement {
                 hotelInCity.add(hotel);
             }
         }
+
+        // TODO - temp debug print
+        System.out.println("* DEBUG - \tfounded " + hotelInCity.size() + " hotels in " + city + " city.");
 
         if (hotelInCity.size() <= 0) {
             return null;

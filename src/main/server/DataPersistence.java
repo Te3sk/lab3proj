@@ -1,6 +1,5 @@
 package main.server;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,7 +28,9 @@ public class DataPersistence {
      */
     public void saveUsers(Map<String, User> users, String filePath) {
         try {
+            // convert the map in a list
             List<User> temp = new ArrayList<>(users.values());
+            // save the list in the file
             JsonUtil.serializeListToFile(temp, filePath);
         } catch (Exception e) {
             System.out.println("Error during users save: " + e);
