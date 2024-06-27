@@ -56,6 +56,12 @@ public class HOTELIERServer implements Runnable {
             this.serverSocketChannel.register(this.selector, SelectionKey.OP_ACCEPT);
             this.isRunning = true;
             this.requestHandlers = new ArrayList<>();
+
+            // TODO - temp debug print
+            System.out.println("* DEBUG - \ttcpAddr = " + tcpAddr);
+            System.out.println("* DEBUG - \ttcpPort = " + tcpPort);
+            System.out.println("* DEBUG - \tudpAddr = " + udpAddr);
+            System.out.println("* DEBUG - \tudpPort = " + broadcastPort);
         } catch (Exception e) {
             // ! error message !
             System.out.println("Error during server construction: " + e.getMessage());
@@ -124,6 +130,7 @@ public class HOTELIERServer implements Runnable {
     public void run() {
         // * Log message *
         System.out.println("Server is running...");
+
         // Create a ThreadPoolExecutor with a core of pool (size 1, max size 100)
         // and keep-alive time of 300 sec for idle threads
         ThreadPoolExecutor executor = new ThreadPoolExecutor(1, 100, 300, TimeUnit.SECONDS,
@@ -153,7 +160,8 @@ public class HOTELIERServer implements Runnable {
                         SocketChannel connection = this.serverSocketChannel.accept();
 
                         // TODO - temp debug print
-                        System.out.println("New connection accepted: " + connection.getRemoteAddress());
+                        System.out.println("* DEBUG (HOTELIERServer.run) - \tNew Connection Accepted: "
+                                + connection.getRemoteAddress());
 
                         // configure the connection to be non-blocking
                         connection.configureBlocking(false);

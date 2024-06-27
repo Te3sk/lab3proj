@@ -139,6 +139,7 @@ public class RequestHandler implements Runnable {
                 try {
                     this.write("Error: invalid message format (too many parameters: " + parts.length + ")");
                 } catch (Exception e) {
+                    // ! Error message !
                     System.out.println(e.getMessage());
                 }
             } else {
@@ -154,6 +155,7 @@ public class RequestHandler implements Runnable {
                         for (int i = 0; i < parts.length; i++) {
                             System.out.println("\tparameter " + Integer.toString(i) + "- " + parts[i]);
                         }
+                        
                         this.signIn(parts[0], this.callerAddress, parts[2], parts[3]);
                         break;
                     case "LOGIN":

@@ -39,7 +39,8 @@ public class ServerMain {
             // start the server
             server.run();
         } catch (Exception e) {
-            System.out.println("Error during server start: " + e);
+            // ! Error message !
+            System.out.println("Error during server start: " + e.getMessage());
         }
     }
 }

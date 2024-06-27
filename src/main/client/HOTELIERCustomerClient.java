@@ -53,7 +53,7 @@ public class HOTELIERCustomerClient {
      */
     @SuppressWarnings("deprecation") // TODO - temp ignoring warning
     public HOTELIERCustomerClient(InetAddress tcpAddr, InetAddress udpAddr, Integer port, Integer multicastPort)
-            throws IOException {
+            throws IOException, Exception {
         try {
             this.username = null;
             this.logged = false;
@@ -61,56 +61,57 @@ public class HOTELIERCustomerClient {
             this.selector = Selector.open();
             // open a socket channel
             this.socketChannel = SocketChannel.open();
-            System.out.println("try to connect with the server...");
+            // connect to the server
+            this.isConnect = this.socketChannel.connect(new InetSocketAddress(tcpAddr, port));
+            System.out.println("Try to connect with the server...");
             // configure the socket channel
             this.socketChannel.configureBlocking(false);
             // register the socket channel with the selector
             this.socketChannel.register(this.selector, 0);
-            // connect to the server
-            this.isConnect = this.socketChannel.connect(new InetSocketAddress(tcpAddr, port));
-            // TODO - temp debug print
-            System.out.println("* DEBUG - \tHOTELIERCustomerClient.isConnect = " + this.isConnect);
-            // wait for the connection to complete
-            // while (!this.socketChannel.finishConnect()) {
-            //     // Wait or do nothing until the connection is established
-            // }
-            System.out.println("connected with the server...");
             
-            // TODO - temp debug print
-            System.out.println("* DEBUG (costructor) - \t(HOTELIERCustomerClient.isConnect = " + this.isConnect + ")");
-            this.socketChannel.configureBlocking(false);
-
-            // initialize the multicast socket
-            this.notificator = new MulticastSocket(multicastPort);
-            // join the multicast group
-            this.notificator.joinGroup(udpAddr);
-            this.executorService = Executors.newSingleThreadExecutor();
+            if (this.isConnect == false) {
+                // * Log message *
+                throw new Exception("Connection with the server failed");
+            } else {
+                // * Log message *
+                System.out.println("Connection successful\n");
+                
+                // initialize the multicast socket
+                this.notificator = new MulticastSocket(multicastPort);
+                // join the multicast group
+                this.notificator.joinGroup(udpAddr);
+                this.executorService = Executors.newSingleThreadExecutor();
+            }
         } catch (IOException e) {
-            System.out.println("IO Error during client initialization:\n" + e.getMessage());
+            throw new Exception(e.getMessage());
         } catch (Exception e) {
-            System.out.println("Error during client initialization:\n" + e.getMessage());
+            // System.out.println("Error during client initialization:\n" + e.getMessage());
+            throw new IOException(e.getMessage());
         }
-        this.cli = new CLI();
-        // TODO - this.executorService.submit() - classe per ricevere notifiche sulla
-        // multicast socket
-        
-        // set error messages
-        this.errors.add("USERN_Y");
-        this.errors.add("USERN_N");
-        this.errors.add("EMPTYF");
-        this.errors.add("WRONGPSW");
-        this.errors.add("HOTEL");
-        this.errors.add("CITY");
 
-        // set operations map
-        this.op.put(1, "SIGNIN");
-        this.op.put(2, "LOGIN");
-        this.op.put(3, "HOTEL");
-        this.op.put(4, "ALLHOTEL");
-        this.op.put(5, "REVIEW");
-        this.op.put(6, "BADGE");
-        this.op.put(7, "LOGOUT");
-        this.op.put(8, "QUIT");
+        if (this.isConnect == true) {
+            this.cli = new CLI();
+            // TODO - this.executorService.submit() - classe per ricevere notifiche sulla
+            // multicast socket
+    
+            // set error messages
+            this.errors.add("USERN_Y");
+            this.errors.add("USERN_N");
+            this.errors.add("EMPTYF");
+            this.errors.add("WRONGPSW");
+            this.errors.add("HOTEL");
+            this.errors.add("CITY");
+    
+            // set operations map
+            this.op.put(1, "SIGNIN");
+            this.op.put(2, "LOGIN");
+            this.op.put(3, "HOTEL");
+            this.op.put(4, "ALLHOTEL");
+            this.op.put(5, "REVIEW");
+            this.op.put(6, "BADGE");
+            this.op.put(7, "LOGOUT");
+            this.op.put(8, "QUIT");
+        }
 
     }
 
@@ -123,7 +124,8 @@ public class HOTELIERCustomerClient {
         System.out.println("Client is running...");
 
         // // // TODO - temp debug print
-        // // System.out.println("* DEBUG - \t (HOTELIERCustomerClient.isConnect = " + this.isConnect + ")");
+        // // System.out.println("* DEBUG - \t (HOTELIERCustomerClient.isConnect = " +
+        // this.isConnect + ")");
         if (this.socketChannel.keyFor(this.selector) == null) {
             System.out.println("key is null");
         } else {
@@ -195,6 +197,13 @@ public class HOTELIERCustomerClient {
         // // }
     }
 
+    /**
+     * Handles the user interaction in the HOTELIER customer client.
+     * This method allows the user to perform various actions based on the selected option.
+     * The user can register, login, search for hotels, view all hotels, write reviews, and logout.
+     * 
+     * @throws Exception if an error occurs during the execution of the selected action.
+     */
     protected void handleUser() {
         int n = -1;
 
@@ -207,12 +216,7 @@ public class HOTELIERCustomerClient {
             n = this.cli.homePage(null);
         }
 
-        // TODO - temp debug print
-        System.out.println("* DEBUG - \tbefore while loop in handleUser()\n\t\tHOTELIERCustomerClient.isConnect = "
-                + this.isConnect);
-        while (true) {
-            // TODO - temp debug print
-            System.out.println("* DEBUG - \t\tin while loop in handleUser()");
+        while (this.isConnect) {
             String[] param = null;
             String city = null;
             Object[] param2 = null;
@@ -255,18 +259,15 @@ public class HOTELIERCustomerClient {
                     break;
                 // review
                 case 5:
-                    // TODO - check if the Object[].. stuff work
                     param2 = this.cli.insertReview();
                     try {
-                        // this.ins
+                        // TODO - this.insertReview
                     } catch (Exception e) {
                         System.out.println(e.getMessage());
                     }
                 case 7:
                     // logout
                 case 8:
-                    // TODO - temp debug print
-                    System.out.println("* DEBUG - \tentering in QUIT method");
                     this.quit();
                     break;
                 default:
@@ -668,8 +669,6 @@ public class HOTELIERCustomerClient {
                 }
             }
 
-            // TODO - temp debug print
-            System.out.println("* DEBUG - \tHOTELIERCustomerClient.isConnect = false");
             this.isConnect = false;
             // * Log message *
             System.out.println("Client disconnected succesfully");
