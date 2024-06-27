@@ -10,6 +10,8 @@ import java.util.Set;
 
 import main.dataModels.Review;
 
+// TODO - user can't insert a username with "_" char, handle it
+
 public class CLI {
     // standard message
     private String dash = "---------------------------------";
@@ -23,13 +25,12 @@ public class CLI {
      * @return the number of the operation chosen by the user
      */
     public int homePage(String username) {
-        System.out.println(this.dash + "\n");
         Map<Integer, String> op = new HashMap<>();
 
         if (username != null) {
-            System.out.println("\tWelcome " + username + "!");
+            System.out.println(this.dash + "\n\tWELCOME " + username + "!\n" + this.dash);
         } else {
-            System.out.println("Welcome!");
+            System.out.println(this.dash + "\n\tWELCOME!\n" + this.dash);
         }
 
         // register, login, logout, searchHotel, searchAllHotels, insertReview,
@@ -93,7 +94,8 @@ public class CLI {
             n = this.sc.nextInt();
         } while (!valid.contains(n));
 
-        System.out.println("Operazione scelta: " + op.get(n));
+        // TODO - temp debug print
+        System.out.println("* DEBUG - \tOperazione scelta: " + op.get(n));
 
         return n;
     }
@@ -104,22 +106,20 @@ public class CLI {
      * @return an array of 2 strings, the first is the username, the second is the
      *         password
      */
-    public String[] insertCred() {
+    public String[] insertCred(String title) {
         String username = null;
         String psw = null;
 
-        System.out.println(this.dash + "\n\tREGISTRATION\n" + this.dash);
-        
-        // todo - the first time is ok with this, since the second have to enter a line before the program print "Username"
-        // if (this.sc.hasNext()) {
-        //     this.sc.nextLine();
-        // }
+        System.out.println(this.dash + "\n\t" + title + "\n" + this.dash);
+
+        // TODO - the first time is ok with this, since the second have to enter a line
+        // before the program print "Username"
 
         this.sc.nextLine();
 
         System.out.println("Username:");
         username = this.sc.nextLine();
-        
+
         System.out.println("Password:");
         psw = this.sc.nextLine();
 
@@ -248,7 +248,7 @@ public class CLI {
     }
 
     public void exit() {
-        // todo
-        this.sc.close(); 
+        // TODO
+        this.sc.close();
     }
 }

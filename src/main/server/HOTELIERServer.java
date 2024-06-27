@@ -7,6 +7,7 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Scanner;
@@ -15,7 +16,7 @@ import java.util.Timer;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.io.File;
+// // import java.io.File;
 
 public class HOTELIERServer implements Runnable {
     private long timeInterval;
@@ -53,43 +54,46 @@ public class HOTELIERServer implements Runnable {
             this.serverSocketChannel.bind(new InetSocketAddress(tcpAddr, tcpPort));
             this.selector = Selector.open();
             this.serverSocketChannel.register(this.selector, SelectionKey.OP_ACCEPT);
+            this.isRunning = true;
+            this.requestHandlers = new ArrayList<>();
         } catch (Exception e) {
+            // ! error message !
             System.out.println("Error during server construction: " + e.getMessage());
         }
-    } 
-
-    /**
-     * start the server
-     */
-    public void start() {
-        try {
-            // start listening
-            Thread listener = new Thread(this);
-            listener.start();
-            Timer timer = new Timer();
-            this.isRunning = true;
-
-            // start broadcasting
-            timer.scheduleAtFixedRate(this.notificationService, this.timeInterval, this.timeInterval);
-            Scanner scanner = new Scanner(System.in);
-            System.out.println("Press any key to stop the server...\n");
-            // wait for shutdown request
-            scanner.nextLine();
-            // shutdown
-            System.out.println("shouting down the server...");
-            scanner.close();
-            this.serverSocketChannel.close();
-            listener.interrupt();
-            this.notificationService.close();
-            timer.cancel();
-            this.selector.close();
-            this.hotelManagement.saveHotel();
-            this.userManagement.saveUsers();
-            this.isRunning = false;
-        } catch (Exception e) {
-            System.out.println("Error during server start: " + e.getMessage());
-        }
     }
+
+    // // /**
+    // // * start the server
+    // // */
+    // // public void start() {
+    // // try {
+    // // // start listening
+    // // Thread listener = new Thread(this);
+    // // listener.start();
+    // // Timer timer = new Timer();
+    // // this.isRunning = true;
+    // // // start broadcasting
+    // // timer.scheduleAtFixedRate(this.notificationService, this.timeInterval,
+    // this.timeInterval);
+    // // Scanner scanner = new Scanner(System.in);
+    // // System.out.println("Press any key to stop the server...\n");
+    // // // wait for shutdown request
+    // // scanner.nextLine();
+    // // // shutdown
+    // // System.out.println("shouting down the server...");
+    // // scanner.close();
+    // // this.serverSocketChannel.close();
+    // // listener.interrupt();
+    // // this.notificationService.close();
+    // // timer.cancel();
+    // // this.selector.close();
+    // // this.hotelManagement.saveHotel();
+    // // this.userManagement.saveUsers();
+    // // this.isRunning = false;
+    // // } catch (Exception e) {
+    // // System.out.println("Error during server start: " + e.getMessage());
+    // // }
+    // // }
 
     /**
      * Fetches the appropriate RequestHandler based on the given SocketChannel.
@@ -118,6 +122,8 @@ public class HOTELIERServer implements Runnable {
      */
     @Override
     public void run() {
+        // * Log message *
+        System.out.println("Server is running...");
         // Create a ThreadPoolExecutor with a core of pool (size 1, max size 100)
         // and keep-alive time of 300 sec for idle threads
         ThreadPoolExecutor executor = new ThreadPoolExecutor(1, 100, 300, TimeUnit.SECONDS,
@@ -145,28 +151,39 @@ public class HOTELIERServer implements Runnable {
                     if (key.isAcceptable()) {
                         // accept the connection
                         SocketChannel connection = this.serverSocketChannel.accept();
+
+                        // TODO - temp debug print
+                        System.out.println("New connection accepted: " + connection.getRemoteAddress());
+
                         // configure the connection to be non-blocking
                         connection.configureBlocking(false);
                         // register the new connection with the selector
                         connection.register(this.selector, SelectionKey.OP_READ);
+
                         // add new request handler to the list
                         this.requestHandlers.add(new RequestHandler(this.userManagement, this.hotelManagement,
                                 connection, this.selector));
-                        System.out.println("New connection accepted: " + connection.getRemoteAddress());
                     } else if (key.isReadable()) {
                         // get the connection from the key
                         SocketChannel connection = (SocketChannel) key.channel();
+                        // cancel the key's interest in read operations
                         connection.keyFor(this.selector).interestOps(0);
+                        // submit the request handler to the executor
                         executor.submit(this.fetchHandler(connection));
                     }
+
+                    // remove the key from the iterator
                     keyIterator.remove();
                 }
             } catch (Exception e) {
                 if (!this.isRunning) {
+                    // * Log message *
                     System.out.println("Server is shutting down...");
                     break;
+                } else {
+                    // ! Error message !
+                    System.out.println(e.getMessage());
                 }
-                System.out.println(e.getMessage());
             }
         }
         executor.close();

@@ -56,7 +56,7 @@
 //             }
 //             System.out.println("done");
 //         } catch (ClosedChannelException e) {
-//             // todo - quit method
+//             // TODO - quit method
 //             // this.quit();
 //             System.out.println("a client quit");
 //         } catch (IOException e) {
@@ -74,11 +74,11 @@
 //         // create a StringBuilder to store the read data
 //         StringBuilder stringBuilder = new StringBuilder();
 //         // initialize the buffer with a specific capacity
-//         // todo - understand how big 
+//         // TODO - understand how big 
 //         buffer = ByteBuffer.allocate(1924);
 
 //         // Continuosly read data from the connection util no more data is avaiabile
-//         // todo - try-catch statemente? in or out the while?
+//         // TODO - try-catch statemente? in or out the while?
 //         while (true) {
 //             // clear the buffer to prepare for reading
 //             buffer.clear();
@@ -105,7 +105,7 @@
 //         // convert the stringBuilder to a string
 //         String msg = stringBuilder.toString();
 
-//         // todo - ? 
+//         // TODO - ? 
 //         // print the received msg and its source address
 //         System.out.println("New message from " + this.socketChannel.getRemoteAddress().toString() + ":\n\t" + msg);
 
@@ -184,35 +184,35 @@
 //             // based on the op, perform corrisponding action
 //             switch (op) {
 //                 case "signing":
-//                     // todo - dev method                    
+//                     // TODO - dev method                    
 //                     break;
 
 //                 case "login":
-//                     // todo - dev method                    
+//                     // TODO - dev method                    
 //                     break;
                 
 //                 case "search":
-//                     // todo - dev method                    
+//                     // TODO - dev method                    
 //                     break;
 
 //                 case "searchAll":
-//                     // todo - dev method                    
+//                     // TODO - dev method                    
 //                     break;
 
 //                 case "review":
-//                     // todo - dev method                    
+//                     // TODO - dev method                    
 //                     break;
 
 //                 case "badge":
-//                     // todo - dev method                    
+//                     // TODO - dev method                    
 //                     break;
 
 //                 case "logout":
-//                     // todo - dev method                    
+//                     // TODO - dev method                    
 //                     break;
 
 //                 case "quit":
-//                     // todo - dev method                    
+//                     // TODO - dev method                    
 //                     break;
 
 //                 default:
@@ -306,7 +306,7 @@
 //         } catch (ProtocolException e) {
 //             this.write("PROTOCOL EXCPETION: " + e.getMessage());
 //         }
-//         // todo - no match, username and pwd exception
+//         // TODO - no match, username and pwd exception
 //     }
 
 //     /**
@@ -320,19 +320,19 @@
 //             // deserialize the name and city from the JSON data
 //             String[] values = this.getDeserialized(new String[] {"name", "city"}, reader);
 //             // search for a hotel with the specified name and city
-//             // todo - set right "throw" in HotelManagement when write the exception below
+//             // TODO - set right "throw" in HotelManagement when write the exception below
 //             Hotel hotel = this.hotelManagement.searchHotel(values[0], values[1]);
 //             if (hotel == null) {
 //                 // if the hotel is not found, send a message to the client indicating that the hotel was not found
 //                 this.write("Hotel not found");
 //             } else {
-//                 // todo - hotel.toString()
+//                 // TODO - hotel.toString()
 //                 this.write(hotel.toString());
 //             }
 //         } catch (ProtocolException e) {
 //             this.write("PROTOCOL EXCPETION: " + e.getMessage());
 //         }
-//         // todo - no match, hotel or city not found exception
+//         // TODO - no match, hotel or city not found exception
 //     }
 
 //     /**
@@ -346,7 +346,7 @@
 //             // deserialize the city from the JSON data
 //             String city = this.getDeserialized(new String[] {"city"}, reader)[0];
 //             // search for hotels in the specified city
-//             // todo - set right "throw" in HotelManagement when write the exception below
+//             // TODO - set right "throw" in HotelManagement when write the exception below
 //             List<Hotel> hotels = this.hotelManagement.searchHotelByCity(city);
 //             if (hotels == null) {
 //                 // if no hotels are found, send a message to the client indicating that no hotels were found
@@ -355,7 +355,7 @@
 //         } catch (ProtocolException e) {
 //             this.write("PROTOCOL EXCPETION: " + e.getMessage());
 //         }
-//         // todo - no match, city not found exception
+//         // TODO - no match, city not found exception
 //     }
 
 //     /**
@@ -366,7 +366,7 @@
 //      * @throws IOException if an I/O error occurs while writing to the client
 //      */
 //     protected void logout () throws IOException {
-//         // todo - check if the user is logged in (understand username value if he is not logged in)
+//         // TODO - check if the user is logged in (understand username value if he is not logged in)
 //         if(this.username == null) {
 //             // if the user is not logged in, send a message to the client indicating that the user is not logged in
 //             this.write(username + " is not logged in");
@@ -376,7 +376,7 @@
 //     }
 
 //     // deserializeReview
-//     // todo - add invalid review, absent city excp
+//     // TODO - add invalid review, absent city excp
 //     protected void deserializedReview (JsonReader reader) throws ProtocolException, IOException {
 //         String name;
 //         String city;

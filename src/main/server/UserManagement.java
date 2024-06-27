@@ -36,6 +36,8 @@ public class UserManagement {
      * @throws USERN_Y if the username already exists
      */
     public synchronized void register(String username, String psw) throws Exception {
+        // TODO - temp debug print
+        System.out.println("* DEBUG\tstoring new user: " + username + " - " + psw + " *");
         // check if username and psw is empty
         if (username == null || username.isEmpty() || psw == null || psw.isEmpty()) {
             throw new Exception("EMPTYF");

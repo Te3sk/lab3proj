@@ -15,7 +15,7 @@ public class HotelManagement {
     private String hotelPath;
     /** map as (key:hotel.id, value:Hotel) */
     private Map<String, Hotel> hotels;
-    private File hotelFile;
+    // // // private File hotelFile;
     private DataPersistence dataPersistence;
 
     /**
@@ -25,6 +25,17 @@ public class HotelManagement {
         this.hotelPath = hotelPath;
         this.dataPersistence = new DataPersistence();
         this.hotels = dataPersistence.loadHotels(hotelPath);
+        // todo - temp test
+        // this.deserializationTest();
+    }
+
+    // todo - temp test
+    private void deserializationTest() {
+        System.out.println("---------------------\nDeserialization test (begin) \n---------------------");
+        for (Hotel hotel : this.hotels.values()) {
+            System.out.println(hotel.toString());
+        }
+        System.out.println("---------------------\nDeserialization test (end) \n---------------------");
     }
 
     /**

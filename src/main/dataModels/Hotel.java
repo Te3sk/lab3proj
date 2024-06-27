@@ -15,70 +15,94 @@ public class Hotel {
     private double rate;
     private Map<String, Integer> ratings;
 
+    /**
+     * (ID) Nome hotel
+     * rank
+     * città - telefono
+     * descrizione
+     * servizi:
+     * - servizio1
+     * - servizio2
+     * review number
+     * avergae rating
+     * average rating1
+     * average rating2
+     * average rating3
+     * average rating4
+     * average rating5
+     */
     @Override
-    public String toString(){
+    public String toString() {
         String string = "";
-        string += "(ID: " + this.id + ") " + this.name + "\nRANK: " + Integer.toString(this.rank) + "\n" + this.city + " - " + this.phone + "\n\t" + description + "\nSERVICES:\n";
-        
+        string += "(ID: " + this.id + ") " + this.name + "\nRANK: " + Integer.toString(this.rank) + "\n" + this.city
+                + " - " + this.phone + "\n\t" + description + "\nSERVICES:\n";
+
         for (String serv : this.services) {
             string += "- " + serv + "\n";
         }
 
-        string += Integer.toString(this.reviews.size()) + " reviews:\n";
+        int reviewsNumber;
+        if (this.reviews == null) {
+            reviewsNumber = 0;
+        } else {
+            reviewsNumber = this.reviews.size();
+        }
+
+        string += Integer.toString(reviewsNumber) + " reviews:\n";
         string += "\tAverage Global Rate: " + Double.toString(this.rate);
         for (String key : this.ratings.keySet()) {
-            string += "\t\t" + key + Integer.toString(this.ratings.get(key));
+            string += "\t\t" + key + " " + Integer.toString(this.ratings.get(key));
         }
 
         return string;
     }
 
     /**
-    * @return id parameter
-    */
-    public String getId (){
+     * @return id parameter
+     */
+    public String getId() {
         return this.id;
     }
 
     /**
-    * @id you want to set
-    */
-    public void setId (String id){
+     * @id you want to set
+     */
+    public void setId(String id) {
         this.id = id;
     }
 
     /**
-    * @return parameter parameter
-    */
-    public String getDescription (){
+     * @return parameter parameter
+     */
+    public String getDescription() {
         return this.description;
     }
 
     /**
-    * @return phone parameter
-    */
-    public String getPhone (){
+     * @return phone parameter
+     */
+    public String getPhone() {
         return this.phone;
     }
 
     /**
-    * @phone you want to set
-    */
-    public void setPhone (String phone){
+     * @phone you want to set
+     */
+    public void setPhone(String phone) {
         this.phone = phone;
     }
 
     /**
-    * @return services parameter
-    */
-    public List<String> getServices (){
+     * @return services parameter
+     */
+    public List<String> getServices() {
         return this.services;
     }
 
     /**
-    * @services you want to set
-    */
-    public void setServices (List<String> services){
+     * @services you want to set
+     */
+    public void setServices(List<String> services) {
         this.services = services;
     }
 
@@ -88,7 +112,7 @@ public class Hotel {
     public void setDescription(String description) {
         this.description = description;
     }
-    
+
     /**
      * @return name parameter
      */
@@ -153,9 +177,9 @@ public class Hotel {
     }
 
     /**
-    * @reviews you want to set
-    */
-    public void setReviews (List<Review> reviews){
+     * @reviews you want to set
+     */
+    public void setReviews(List<Review> reviews) {
         this.reviews = reviews;
     }
 
@@ -164,7 +188,7 @@ public class Hotel {
      * 
      * @param review the review you want to add
      */
-    public void addReview (Review review) {
+    public void addReview(Review review) {
         this.reviews.add(review);
     }
 
@@ -192,7 +216,7 @@ public class Hotel {
     /**
      * @return a copy of this hotel
      */
-    public Hotel copy()  {
+    public Hotel copy() {
         // todo - DELETE ?????
         Hotel clone = new Hotel();
 

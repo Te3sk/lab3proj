@@ -26,9 +26,14 @@ public class ClientMain {
         InetAddress udpAddr = InetAddress.getByName(properties.getProperty("client.udp.ip"));
         Integer tcpPort = Integer.parseInt(properties.getProperty("client.tcp.port"));
         Integer udpPort = Integer.parseInt(properties.getProperty("client.udp.port"));
+
+        // todo - temp
+        System.out.println("tcpAddr: " + tcpAddr);
+        System.out.println("tcpPort: " + tcpPort);
+        System.out.println("udpAddr: " + udpAddr);
+        System.out.println("udpPort: " + udpPort);
         
         // start the client instance
-        System.out.println("call HOTELIERCustomerClient constructor");
         HOTELIERCustomerClient client = new HOTELIERCustomerClient(tcpAddr, udpAddr, tcpPort, udpPort);
         System.out.println("start the client...");
         client.start();            
