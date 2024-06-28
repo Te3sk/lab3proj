@@ -29,6 +29,9 @@ public class DataPersistence {
             List<User> temp = new ArrayList<>(users.values());
             // save the list in the file
             JsonUtil.serializeListToFile(temp, filePath);
+
+            // TODO - temp debug print
+            System.out.println("* DEBUG - \tdone");
         } catch (Exception e) {
             System.out.println("Error during users save: " + e);
         }

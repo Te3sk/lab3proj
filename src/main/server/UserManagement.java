@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import main.dataModels.User;
 
@@ -27,6 +28,7 @@ public class UserManagement {
         this.dataPersistence = new DataPersistence();
         this.users = this.dataPersistence.loadUsers(dataFilePath);
         this.loggedInUsers = new HashSet<>();
+        this.lock = new ReentrantLock();
     }
 
     /**
@@ -55,6 +57,9 @@ public class UserManagement {
         // save new user datas
         User newUser = new User(username, psw);
         this.users.put(newUser.getUsername(), newUser);
+
+        // TODO - temp debug print
+        System.out.println("* DEBUG - \tsave user, now register on json");
 
         // update json file
         this.dataPersistence.saveUsers(this.users, this.dataFilePath);
@@ -171,7 +176,7 @@ public class UserManagement {
 
         // release the lock
         this.lock.unlock();
-        
+
         return temp;
     }
 }

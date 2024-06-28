@@ -32,11 +32,11 @@ public class HOTELIERCustomerClient {
     private Selector selector;
     private ByteBuffer buffer = ByteBuffer.allocateDirect(1024);
     private MulticastSocket notificator;
-    // TODO (remove) -  private ExecutorService executorService;
+    // TODO (remove) - private ExecutorService executorService;
     private Map<Integer, String> op = new HashMap<Integer, String>();
     private Boolean isConnect;
 
-    private Lock lock = new ReentrantLock();
+    private Lock lock;
     private Thread notificationThread;
     private NotificationReciever notificationReciever;
 
@@ -51,6 +51,9 @@ public class HOTELIERCustomerClient {
     @SuppressWarnings("deprecation")
     public HOTELIERCustomerClient(InetAddress tcpAddr, InetAddress udpAddr, Integer port, Integer multicastPort)
             throws IOException, Exception {
+        // get the lock
+        this.lock = new ReentrantLock();
+
         try { // initialize attributes and other stuff
             this.username = null;
             this.logged = false;
@@ -77,7 +80,6 @@ public class HOTELIERCustomerClient {
                 this.notificator = new MulticastSocket(multicastPort);
                 // join the multicast group
                 this.notificator.joinGroup(udpAddr);
-                // TODO (remove) - this.executorService = Executors.newSingleThreadExecutor();
             }
 
             // initialize notification thread
@@ -148,81 +150,87 @@ public class HOTELIERCustomerClient {
      *                   action.
      */
     protected void handleUser() {
+        // TODO - temp debug print
+        System.out.println("* DEBUG - \tlock initialized - lock = null? -> " + (this.lock == null));
+
         while (this.isConnect) {
-            int n = -1;
-
-            // get the condition variable
-            this.lock.lock();
-
-            if (this.logged) {
-                n = this.cli.homePage(this.username);
-            } else {
-                n = this.cli.homePage(null);
+            try{
+                int n = -1;
+    
+                // get the condition variable
+                this.lock.lock();
+    
+                if (this.logged) {
+                    n = this.cli.homePage(this.username);
+                } else {
+                    n = this.cli.homePage(null);
+                }
+    
+                String[] param = null;
+                String city = null;
+                Object[] param2 = null;
+                switch (n) {
+                    // signin
+                    case 1:
+                        String[] creds = this.cli.insertCred("REGISTRATION");
+                        try {
+                            this.register(creds[0], creds[1]);
+                        } catch (Exception e) {
+                            System.out.println("Error during registration: " + e.getMessage());
+                        }
+                        break;
+                    // login
+                    case 2:
+                        param = this.cli.insertCred("LOGIN");
+                        try {
+                            this.login(param[0], param[1]);
+                        } catch (Exception e) {
+                            System.out.println(e.getMessage());
+                        }
+                        break;
+                    // hotel
+                    case 3:
+                        param = this.cli.searchHotel();
+                        try {
+                            this.searchHotel(param[0], param[1]);
+                        } catch (Exception e) {
+                            System.out.println(e.getMessage());
+                        }
+                        break;
+                    // all hotel
+                    case 4:
+                        city = this.cli.searchAllHotels();
+                        try {
+                            this.searchAllHotels(city);
+                        } catch (Exception e) {
+                            System.out.println(e.getMessage());
+                        }
+                        break;
+                    // review
+                    case 5:
+                        param2 = this.cli.insertReview();
+                        try {
+                            this.insertReview((String) param2[0], (String) param2[1], (Review) param2[2]);
+                        } catch (Exception e) {
+                            System.out.println(e.getMessage());
+                        }
+                        break;
+                    case 6:
+                        // TODO - show badges handling
+                        break;
+                    case 7:
+                        this.logout(this.username);
+                        break;
+                    case 8:
+                        this.quit();
+                        break;
+                    default:
+                        break;
+                }
+            } finally {
+                this.lock.unlock();
             }
 
-            String[] param = null;
-            String city = null;
-            Object[] param2 = null;
-            switch (n) {
-                // signin
-                case 1:
-                    String[] creds = this.cli.insertCred("REGISTRATION");
-                    try {
-                        this.register(creds[0], creds[1]);
-                    } catch (Exception e) {
-                        System.out.println("Error during registration: " + e.getMessage());
-                    }
-                    break;
-                // login
-                case 2:
-                    param = this.cli.insertCred("LOGIN");
-                    try {
-                        this.login(param[0], param[1]);
-                    } catch (Exception e) {
-                        System.out.println(e.getMessage());
-                    }
-                    break;
-                // hotel
-                case 3:
-                    param = this.cli.searchHotel();
-                    try {
-                        this.searchHotel(param[0], param[1]);
-                    } catch (Exception e) {
-                        System.out.println(e.getMessage());
-                    }
-                    break;
-                // all hotel
-                case 4:
-                    city = this.cli.searchAllHotels();
-                    try {
-                        this.searchAllHotels(city);
-                    } catch (Exception e) {
-                        System.out.println(e.getMessage());
-                    }
-                    break;
-                // review
-                case 5:
-                    param2 = this.cli.insertReview();
-                    try {
-                        this.insertReview((String)param2[0], (String)param2[1], (Review)param2[2]);
-                    } catch (Exception e) {
-                        System.out.println(e.getMessage());
-                    }
-                    break;
-                case 6:
-                    // TODO - show badges handling
-                    break;
-                case 7:
-                    this.logout(this.username);
-                    break;
-                case 8:
-                    this.quit();
-                    break;
-                default:
-                    break;
-            }
-
-            this.lock.unlock();
         }
     }
 
@@ -341,11 +349,14 @@ public class HOTELIERCustomerClient {
         // reset the interesting option for no operation
         socketChannel.keyFor(selector).interestOps(0);
     }
-    
+
     /**
-     * The `NotificationReciever` class is responsible for handling incoming notifications in a separate thread.
-     * It listens for incoming UDP packets, extracts the message, and handles the notification.
-     * If an error occurs during the notification receiving process, an error message is printed.
+     * The `NotificationReciever` class is responsible for handling incoming
+     * notifications in a separate thread.
+     * It listens for incoming UDP packets, extracts the message, and handles the
+     * notification.
+     * If an error occurs during the notification receiving process, an error
+     * message is printed.
      */
     protected class NotificationReciever implements Runnable {
         private InetAddress udpAddr;
@@ -353,9 +364,9 @@ public class HOTELIERCustomerClient {
         private boolean isRunning = true;
         private Lock lock;
 
-
         /**
-         * Constructs a new NotificationReciever object with the specified UDP address and port.
+         * Constructs a new NotificationReciever object with the specified UDP address
+         * and port.
          *
          * @param udpAddr the UDP address to bind the receiver to
          * @param udpPort the UDP port to bind the receiver to
@@ -369,8 +380,10 @@ public class HOTELIERCustomerClient {
         /**
          * Executes the logic for handling incoming notifications.
          * This method runs in a separate thread and listens for incoming UDP packets.
-         * When a packet is received, it extracts the message and handles the notification.
-         * If an error occurs during the notification receiving process, an error message is printed.
+         * When a packet is received, it extracts the message and handles the
+         * notification.
+         * If an error occurs during the notification receiving process, an error
+         * message is printed.
          */
         @Override
         public void run() {
@@ -389,10 +402,15 @@ public class HOTELIERCustomerClient {
 
                     // take the lock before handling the notification
                     this.lock.lock();
-                    // * Log message *
-                    System.out.println("----------------------------\n New top hotel in local ranking:\n" + msg + "\n----------------------------");
-                    // release the lock after handling the notification
-                    this.lock.unlock();
+
+                    try{
+                        // * Log message *
+                        System.out.println("----------------------------\n New top hotel in local ranking:\n" + msg
+                                + "\n----------------------------");
+                    } finally {
+                        // release the lock after handling the notification
+                        this.lock.unlock();
+                    }
                 }
             } catch (Exception e) {
                 // ! Error message !
@@ -403,7 +421,7 @@ public class HOTELIERCustomerClient {
                 }
             }
         }
-        
+
         /**
          * Stops the notification receiver.
          */
@@ -411,15 +429,16 @@ public class HOTELIERCustomerClient {
             this.isRunning = false;
         }
     }
-    
+
     /**
      * Stops the notification functionality.
-     * If the notification receiver is running, it will be stopped and the notification thread will be joined.
+     * If the notification receiver is running, it will be stopped and the
+     * notification thread will be joined.
      */
     protected void stopNotification() {
         if (this.notificationReciever != null) {
             this.notificationReciever.stop();
-            try{
+            try {
                 this.notificationThread.join();
             } catch (InterruptedException e) {
                 // ! Error message !
@@ -439,10 +458,9 @@ public class HOTELIERCustomerClient {
     public void register(String username, String psw) throws Exception {
         String req = "";
         req += "SIGNIN_" + this.socketChannel.toString() + "_" + username + "_" + psw;
-
         // send credentials to the server
         this.write(req);
-
+        
         // recieve response
         String response = this.readAsString();
         if (!this.errors.contains(response)) {
@@ -627,7 +645,8 @@ public class HOTELIERCustomerClient {
      */
     public void insertReview(String hotel, String città, Review review)
             throws Exception {
-        String req = "REVIEW_" + this.socketChannel + "_" + this.username + "_" + hotel + "_" + città + "_" + review.toString();
+        String req = "REVIEW_" + this.socketChannel + "_" + this.username + "_" + hotel + "_" + città + "_"
+                + review.toString();
 
         this.write(req);
 
@@ -678,7 +697,7 @@ public class HOTELIERCustomerClient {
             }
         }
     }
-    
+
     /**
      * Shuts down the client, performing necessary cleanup operations.
      * If the user is logged in, it logs out the user.
