@@ -48,8 +48,8 @@ public class HOTELIERCustomerClient {
      * It provides functionality for managing user authentication and handling
      * errors.
      */
-    @SuppressWarnings("deprecation")
-    public HOTELIERCustomerClient(InetAddress tcpAddr, InetAddress udpAddr, Integer port, Integer multicastPort)
+    @SuppressWarnings("deprecation") // port = tcpPort, multicastPort = udpPort
+    public HOTELIERCustomerClient(InetAddress tcpAddr, InetAddress udpAddr, Integer tcpPort, Integer udpPort)
             throws IOException, Exception {
         // get the lock
         this.lock = new ReentrantLock();
@@ -62,7 +62,7 @@ public class HOTELIERCustomerClient {
             // open a socket channel
             this.socketChannel = SocketChannel.open();
             // connect to the server
-            this.isConnect = this.socketChannel.connect(new InetSocketAddress(tcpAddr, port));
+            this.isConnect = this.socketChannel.connect(new InetSocketAddress(tcpAddr, tcpPort));
             System.out.println("Try to connect with the server...");
             // configure the socket channel
             this.socketChannel.configureBlocking(false);
@@ -77,13 +77,13 @@ public class HOTELIERCustomerClient {
                 System.out.println("Connection successful\n");
 
                 // initialize the multicast socket
-                this.notificator = new MulticastSocket(multicastPort);
+                this.notificator = new MulticastSocket(udpPort);
                 // join the multicast group
                 this.notificator.joinGroup(udpAddr);
             }
 
             // initialize notification thread
-            this.notificationReciever = new NotificationReciever(udpAddr, multicastPort, this.lock);
+            this.notificationReciever = new NotificationReciever(udpAddr, udpPort, this.lock);
             this.notificationThread = new Thread(this.notificationReciever);
         } catch (IOException e) {
             throw new Exception(e.getMessage());
