@@ -16,22 +16,6 @@ public class Hotel {
     private double rate;
     private Map<String, Integer> ratings;
 
-    /**
-     * (ID) Nome hotel
-     * rank
-     * città - telefono
-     * descrizione
-     * servizi:
-     * - servizio1
-     * - servizio2
-     * review number
-     * avergae rating
-     * average rating1
-     * average rating2
-     * average rating3
-     * average rating4
-     * average rating5
-     */
     @Override
     public String toString() {
         String string = "";

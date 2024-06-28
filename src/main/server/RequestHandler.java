@@ -20,27 +20,6 @@ import java.util.Set;
 import main.dataModels.Hotel;
 import main.dataModels.Review;
 
-// ! OPERATION TYPES
-// SIGNIN - LOGIN - LOGOUT - HOTEL - ALLHOTEL - REVIEW - BADGE
-// register - SIGNIN
-// login - LOGIN
-// logout - LOGOUT
-// searchHotel - HOTEL
-// searchAllHotels - ALLHOTEL
-// insertReview - REVIEW
-// showMyBadges - BADGE
-// QUIT
-
-// ! RESPONSE TYPES
-// success - *success string*
-// existing username - USERN_Y
-// non existing username - USERN_N
-// empty fields - EMPTYF
-// wrong password - WRONGPSW
-// non existing hotel - HOTEL
-// non existing city - CITY
-// invalid format - FORMAT
-
 public class RequestHandler implements Runnable {
     private InetAddress udpAddr;
     private int udpPort;
@@ -61,52 +40,42 @@ public class RequestHandler implements Runnable {
     private HotelManagement hotelManagement;
     private Set<String> errors = new HashSet<String>();
 
-    // msg format
-    // "_type:value_username:value_param1:StringParam1_param2:String|ReviewParam2_param3:StringParam3"
-    // The number of param matter. number of param = number of '_'
-    // can be only "_QUIT"
+    /**
+     * Executes the main logic of the RequestHandler in a separate thread.
+     * Continuously reads messages from the client, checks their validity, and dispatches them.
+     * If the message is a quit message, the server is terminated.
+     * If the message has an incorrect number of parameters, a "FORMAT" response is sent back to the client.
+     * If the message is valid, it is dispatched to the appropriate handler.
+     * Handles exceptions related to reading from the client and closing the channel.
+     */
     @Override
     public void run() {
-        // TODO - temp debug print
-        System.out.println("* DEBUG\tREQUEST HANDLER RUN METHOD");
         while (isRunning) {
+            // read message from client, check its validity and dispatch it (handle non correct messages)
             try {
                 // convert the message in a simple String
                 String msg = "";
 
-                // TODO - empty message from client, fix it in a better way
                 // after a successfully request the server recieves infinite empty messages,
                 // whitout this while cycle it became crazy and crashes
                 while (msg.isEmpty()) {
                     msg = this.readAsString();
                 }
 
-                // TODO - temp debug print
-                System.out.println(
-                        "-----------------------------------------\n* DEBUG\tnew message received: >" + msg + "< *");
-
                 // check validity of the message (parameters number)
                 int params = (int) msg.chars().filter(c -> c == '_').count();
-                if (params == 1 && msg.equals("_QUIT")) {
-                    // TODO - check this quit msg (double check), maybe it's not necessary
+                if (params == 1 && msg.equals("_QUIT")) { // quit message
                     // check if the message is a quit message
                     this.quit();
-                } else if (params < 2 || params > 6) {
+                } else if (params < 2 || params > 6) {  // if the message has the wrong number of parameters
                     // else check if the message has the right number of parameters
                     try {
-                        // TODO - temp debug print
-                        System.out.println("* DEBUG (run) - \tinvalid number of parameters (" + params
-                                + ")\n\tmessage: >" + msg + "<");
-
                         this.write("FORMAT");
                     } catch (Exception e) {
                         // ! Error message !
                         System.out.println(e.getMessage());
                     }
-                } else {
-                    // if the message is VALID, dispatch it
-                    // TODO - temp debug print
-                    System.out.println("* DEBUG - \tmessage ok, dispatching... *");
+                } else { // if the message is VALID, dispatch it
                     this.dispatcher(msg);
                 }
             } catch (ClosedChannelException e) {
@@ -121,9 +90,6 @@ public class RequestHandler implements Runnable {
                 System.out.println(e.getMessage());
             }
         }
-
-        // TODO - temp debug print
-        System.out.println("* DEBUG - \tFINE DI QUESTO RUN METHOD\n--------------------------");
     }
 
     /**
@@ -133,58 +99,29 @@ public class RequestHandler implements Runnable {
      * @param msg the incoming message to be processed
      */
     public void dispatcher(String msg) {
-        // TODO - temp debug print
-        System.out.println("* DEBUG - \tDISPATCHER...");
+        // split for the "_" character
         String[] parts = msg.split("_");
-        // TODO - temp debug print
-        System.out.println("* DEBUG  (dispatcher) - \tPARTS PARTS of message (" + msg + "):");
-        if (parts.length == 0) {
-            System.out.println("* DEBUG  (dispatcher) - \tNO PARTS");
-        } else {
-            for (String part : parts) {
-                System.out.println("\t* DEBUG  (dispatcher) - \t" + part);
-            }
+        
+        if (parts.length == 0) { // if the message is empty
+            try{ // empty field message
+                this.write("EMPTYF");
+            } catch (IOException e) {
+                // ! Error message !
+                System.out.println("Error during writing on socket:" + e.getMessage());
+            } 
         }
 
-        // TODO - check this quit msg (double check), maybe it's not necessary
-        // check if the message is a quit message (again)
-        if (parts.length == 1) {
-            this.quit();
-        }
-
-        // TODO - temp debug print
-        System.out.println("* DEBUG  (dispatcher) - \tparts size: " + (parts.length));
-
-        // check if the message has the right number of parameters
-        try {
-            if (parts.length > 6) {
-                // TODO - temp debug print
-                System.out.println("* DEBUG  (dispatcher) - \tinvalid number of parameters (" + parts.length + ")");
-                for (String p : parts) {
-                    System.out.println("\t* DEBUG - \t" + p);
-                }
-
-                try {
+        try { // check if the message has the right number of parameters
+            if (parts.length > 6) { // if have too many parameters
+                try { // format error
                     this.write("FORMAT");
                 } catch (Exception e) {
                     // ! Error message !
                     System.out.println(e.getMessage());
                 }
-            } else {
-                // TODO - temp debug print
-                System.out.println("* DEBUG  (dispatcher) - \tright number of parameters, type: " + parts[0] + " *");
-                // check the type of the request and call the appropriate method
-
-                switch (parts[0]) {
+            } else { // right number of parameters
+                switch (parts[0]) { // check the type of the request and call the appropriate method
                     case "SIGNIN":
-                        // TODO - temp debug print
-                        System.out.println("--------------------------\n* DEBUG  (dispatcher) - \tSIGNIN CASE *\n\t" + msg);
-                        System.out.println("\t" + parts.length + " parameters");
-                        for (int i = 0; i < parts.length; i++) {
-                            System.out.println("\tparameter " + Integer.toString(i) + "- " + parts[i]);
-                        }
-                        System.out.println("* DEBUG (dispatcher) - start dispatching");
-
                         this.signIn(parts[0], this.callerAddress, parts[2], parts[3]);
                         break;
                     case "LOGIN":
@@ -203,9 +140,7 @@ public class RequestHandler implements Runnable {
                                 parts[3]);
                         break;
                     case "REVIEW":
-                        // TODO - temp debug print
-                        System.out.println("* DEBUG (dispatcher) - \tREVIEW CASE");
-                        try {
+                        try { // try to insert the review
                             this.insertReview(parts[0], this.callerAddress, parts[2],
                                     parts[3], parts[4], Review.fromString(parts[5]));
                         } catch (Exception e) {
@@ -220,7 +155,7 @@ public class RequestHandler implements Runnable {
                     case "BADGE":
                         this.showMyBadges(parts[0], this.callerAddress, parts[2]);
                     default:
-                        try {
+                        try { // try to write on the socket (type error)
                             this.write("Error: invalid request type");
                         } catch (Exception e) {
                             // ! Error message !
@@ -241,7 +176,7 @@ public class RequestHandler implements Runnable {
     private void quit() {
         this.isRunning = false;
         try {
-            // this.server.removeHandler(this)
+            // TODO - this.server.removeHandler(this);
             this.callerAddress.keyFor(this.selector).cancel();
             this.callerAddress.close();
         } catch (IOException e) {
@@ -267,7 +202,6 @@ public class RequestHandler implements Runnable {
         this.errors.add("WRONGPSW");
         this.errors.add("HOTEL");
         this.errors.add("CITY");
-        // TODO
         this.errors.add("FORMAT");
     }
 
@@ -282,20 +216,9 @@ public class RequestHandler implements Runnable {
      * @param psw           the password of the user
      */
     public void signIn(String type, SocketChannel callerAddress, String username, String psw) {
-        // TODO - temp debug print
-        System.out.println("* DEBUG\tSIGNIN METHOD (RequestHandler) *");
-
-        // TODO - temp debug print
-        System.out.println("* DEBUG - \ttype: " + type + " *");
         this.type = type;
-        // TODO - temp debug print
-        System.out.println("* DEBUG - \tcallerAddress: " + callerAddress + " *");
         this.callerAddress = callerAddress;
-        // TODO - temp debug print
-        System.out.println("* DEBUG - \tusername: " + username + " *");
         this.username = username;
-        // TODO - temp debug print
-        System.out.println("* DEBUG - \tpsw: " + psw + " *");
         this.psw = psw;
         this.hotelName = null;
         this.cityName = null;
@@ -303,10 +226,7 @@ public class RequestHandler implements Runnable {
 
         try {
             userManagement.register(this.username, this.psw);
-            // TODO - temp debug print
-            System.out.println("* DEBUG\tsending response to the client...");
             this.write("Registration successfull.");
-            System.out.println("User " + this.username + " registered successfully.");
         } catch (Exception e) {
             try {
                 this.write(e.getMessage());
@@ -315,9 +235,6 @@ public class RequestHandler implements Runnable {
                 System.out.println(f.getMessage());
             }
         }
-
-        // TODO - temp debug print
-        System.out.println("* DEBUG - \tEXIT FROM SIGNIN METHOD");
     }
 
     /**
@@ -435,7 +352,6 @@ public class RequestHandler implements Runnable {
             List<Hotel> hotels = hotelManagement.searchHotelByCity(this.getCityName());
             
             for (Hotel hotel : hotels) {
-                
                 response += (hotel.toString() + "\n-------------------\n");
             }
 
@@ -467,16 +383,9 @@ public class RequestHandler implements Runnable {
         this.hotelName = hotelName;
         this.cityName = cityName;
         this.review = review;
-
-        // TODO - temp debug print
-        System.out.println("* DEBUG (insertReview)- \t review:\n\t" + this.review.printReview());
-
         try {
-            // TODO - temp debug print
-            System.out.println("* DEBUG (insertReview) - \tTRY BRANCH");
             Map<String, Hotel> newBest = hotelManagement.addReview(this.getHotelName(), this.getCityName(), this.getReview());
-            // TODO - temp debug print
-            System.out.println("* DEBUG - \t Review added correctly.");
+
             this.write("Review added correctly.");
 
             if (newBest != null) {
@@ -490,16 +399,10 @@ public class RequestHandler implements Runnable {
             }
 
         } catch (IOException e) {
-            // TODO - temp debug print
-            System.out.println("* DEBUG (insertReview)- \tioexception branch");
             // ! Error message !
             System.out.println(e.getMessage());
         } catch (Exception e) {
-            // TODO - temp debug print
-            System.out.println("* DEBUG (insertReview) - \tgeneric excepion branch");
             try {
-                // TODO - temp debug print
-                System.out.println("* \t" + e.getMessage());
                 this.write(e.getMessage());
             } catch (IOException f) {
                 // ! Error message !
@@ -628,7 +531,7 @@ public class RequestHandler implements Runnable {
             buffer.flip();
             while (buffer.hasRemaining()) {
                 // write the buffer to the callerAddress and print the number of byte
-                int byteNumber = this.callerAddress.write(buffer);
+                this.callerAddress.write(buffer);
             }
         }
         mySelector.close();
@@ -733,5 +636,4 @@ public class RequestHandler implements Runnable {
     public void setReview(Review review) {
         this.review = review;
     }
-
 }

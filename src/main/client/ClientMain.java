@@ -28,12 +28,6 @@ public class ClientMain {
             Integer tcpPort = Integer.parseInt(properties.getProperty("client.tcp.port"));
             Integer udpPort = Integer.parseInt(properties.getProperty("client.udp.port"));
 
-            // todo - temp
-            System.out.println("* DEBUG - \ttcpAddr: " + tcpAddr);
-            System.out.println("* DEBUG - \ttcpPort: " + tcpPort);
-            System.out.println("* DEBUG - \tudpAddr: " + udpAddr);
-            System.out.println("* DEBUG - \tudpPort: " + udpPort);
-
             // start the client instance
             try {
                 HOTELIERCustomerClient client = new HOTELIERCustomerClient(tcpAddr, udpAddr, tcpPort, udpPort);

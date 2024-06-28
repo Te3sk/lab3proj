@@ -47,7 +47,7 @@ public class HOTELIERServer implements Runnable {
      */
     public HOTELIERServer(InetAddress tcpAddr, InetAddress udpAddr, int tcpPort, long interval, int broadcastPort,
             String hotelFile, String userFile) {
-        try {
+        try { // attributes initialization
             this.tcpAddr = tcpAddr;
             this.tcpPort = tcpPort;
             this.udpAddr = udpAddr;
@@ -63,12 +63,6 @@ public class HOTELIERServer implements Runnable {
             this.serverSocketChannel.register(this.selector, SelectionKey.OP_ACCEPT);
             this.isRunning = true;
             this.requestHandlers = new ArrayList<>();
-
-            // TODO - temp debug print
-            System.out.println("* DEBUG - \ttcpAddr = " + tcpAddr);
-            System.out.println("* DEBUG - \ttcpPort = " + tcpPort);
-            System.out.println("* DEBUG - \tudpAddr = " + udpAddr);
-            System.out.println("* DEBUG - \tudpPort = " + broadcastPort);
         } catch (Exception e) {
             // ! error message !
             System.out.println("Error during server construction: " + e.getMessage());
@@ -112,7 +106,8 @@ public class HOTELIERServer implements Runnable {
 
         // Loop while the server is running
         while (isRunning) {
-            try {
+            
+            try { //  handles non-blocking I/O operations, accepting new connections and reading data from ready channels
                 // perform a non blocking selection operation to check for ready channels
                 int readyChannels = selector.selectNow();
                 // if no channels ready, skip this ite
@@ -124,18 +119,13 @@ public class HOTELIERServer implements Runnable {
                 Set<SelectionKey> selectedKeys = selector.selectedKeys();
                 Iterator<SelectionKey> keyIterator = selectedKeys.iterator();
 
-                // iterate over selection keys
-                while (keyIterator.hasNext()) {
+                while (keyIterator.hasNext()) { // iterate over selection keys
                     SelectionKey key = keyIterator.next();
 
-                    // if the key's channel is ready to accept a new connection
-                    if (key.isAcceptable()) {
+                    
+                    if (key.isAcceptable()) { // if the key's channel is ready to accept a new connection
                         // accept the connection
                         SocketChannel connection = this.serverSocketChannel.accept();
-
-                        // TODO - temp debug print
-                        System.out.println("* DEBUG (HOTELIERServer.run) - \tNew Connection Accepted: "
-                                + connection.getRemoteAddress());
 
                         // configure the connection to be non-blocking
                         connection.configureBlocking(false);
@@ -145,7 +135,7 @@ public class HOTELIERServer implements Runnable {
                         // add new request handler to the list
                         this.requestHandlers.add(new RequestHandler(this.userManagement, this.hotelManagement,
                                 connection, this.selector, this.udpAddr, this.udpPort));
-                    } else if (key.isReadable()) {
+                    } else if (key.isReadable()) { // else if the key's channel is ready to read data
                         // get the connection from the key
                         SocketChannel connection = (SocketChannel) key.channel();
                         // cancel the key's interest in read operations

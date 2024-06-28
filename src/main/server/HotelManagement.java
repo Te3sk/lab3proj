@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import main.dataModels.Hotel;
 import main.dataModels.Capitals;
@@ -41,20 +40,24 @@ public class HotelManagement {
      * @throws HOTEL  if can't find the hotel
      */
     public Hotel searchHotel(String hotelName, String city) throws Exception {
+        // check hotel parameter validity and hotel existency
         if (hotelName == null || hotelName.isEmpty() || city == null || city.isEmpty()) {
             throw new Exception("EMPTYF");
         }
 
-        if (!Capitals.isValidCapital(city)) {
+        // check city validity if the city is one of the rightones
+        if (city == null || city.isEmpty() || !Capitals.isValidCapital(city)) {
             throw new Exception("CITY");
         }
 
+        // search hotel
         for (Hotel hotel : this.hotels.values()) {
             if (city.equals(hotel.getCity()) && hotelName.equals(hotel.getName())) {
                 return hotel;
             }
         }
 
+        // if can't find the hotel throws exception
         throw new Exception("HOTEL");
     }
 
@@ -66,26 +69,19 @@ public class HotelManagement {
      *         found
      */
     public List<Hotel> searchHotelByCity(String city) throws Exception {
-        // TODO - temp debug print
-        System.out.println("* DEBUG - \tENTER IN SEARCHHOTELBYCITY");
-
-        if (!Capitals.isValidCapital(city)) {
+        // check city validity if the city is one of the rightones
+        if (city == null || city.isEmpty() || !Capitals.isValidCapital(city)) {
             throw new Exception("CITY");
         }
 
-        // TODO - temp debug print
-        System.out.println("* DEBUG - \t\tvalid city (" + city + ")");
-
         List<Hotel> hotelInCity = new ArrayList<Hotel>();
 
+        // search the hotels in the city
         for (Hotel hotel : this.hotels.values()) {
             if (city.equals(hotel.getCity())) {
                 hotelInCity.add(hotel);
             }
         }
-
-        // TODO - temp debug print
-        System.out.println("* DEBUG - \tfounded " + hotelInCity.size() + " hotels in " + city + " city.");
 
         if (hotelInCity.size() <= 0) {
             return null;
@@ -109,11 +105,10 @@ public class HotelManagement {
      * @param review    the review (obj) you want to add
      */
     public Map<String, Hotel> addReview(String nomeHotel, String nomeCittà, Review review) throws Exception {
-        // TODO - temp debug print
-        System.out.println("* DEBUG - \tENTER IN HOTELMANAGEMENT.ADDREVIEW");
         // check if hotel exists and find it
         String currentId = "empty";
 
+        // search the hotel
         for (Hotel hotel : this.hotels.values()) {
             if (nomeHotel.equals(hotel.getName()) && nomeCittà.equals(hotel.getCity())) {
                 currentId = hotel.getId();
@@ -121,28 +116,27 @@ public class HotelManagement {
             }
         }
 
+        // check if the hotel exists
         if (currentId.equals("empty")) {
             throw new Exception("HOTEL");
         }
 
         Hotel current = this.hotels.get(currentId);
 
-        // TODO - temp debug print
-        System.out.println("* DEBUG (hotelManagement.addReview) - \tcurrent: " + System.identityHashCode(current) + "\n\tsrchot: " + System.identityHashCode(this.hotels.get(currentId)));
-        
         // add the review in the list reviews
         current.addReview(review);
 
         // calculate and set new average rate and ratings
         int size = current.getReviewsNumber();
 
+        // calculate the new rate and ratings
         double newRate = (current.getRate() + review.getRate()) / size;
-
         Map<String, Integer> newRatings = new HashMap<>();
         for (String field : review.getRatings().keySet()) {
             newRatings.put(field, ((current.getRatings().get(field) + review.getRatings().get(field)) / size));
         }
 
+        // update the hotel info
         current.setRate(newRate);
         current.setRatings(newRatings);
 
@@ -161,6 +155,7 @@ public class HotelManagement {
         // check if hotel exists and find it
         String currentId = "empty";
 
+        // search the hotel
         for (Hotel hotel : this.hotels.values()) {
             if (nomeHotel.equals(hotel.getName()) && nomeCittà.equals(hotel.getCity())) {
                 currentId = hotel.getId();
@@ -168,20 +163,19 @@ public class HotelManagement {
             }
         }
 
+        // check if the hotel exists
         if (currentId.equals("empty")) {
             throw new Exception("HOTEL");
         }
 
-        // todo - capire se così va bene, se current punta allo stesso indirizzo di
-        // todo - quello nella lista quindi cambia automaticamente o se va aggiornato
-        // todo - quello nella lista
+        // get the reviews of the hotel
         Hotel current = this.hotels.get(currentId);
 
         return current.getReviews();
     }
 
-    /**
-     * todo - levare da qua, scrivere nella relazione
+    // TODO - levare da qua, scrivere nella relazione
+    /** 
      * Per implementare il metodo che aggiorna il rank di ogni hotel nella classe
      * HotelManagement, possiamo adottare un algoritmo che combina la qualità, la
      * quantità e l'attualità delle recensioni per ciascun hotel. La qualità può
@@ -212,6 +206,12 @@ public class HotelManagement {
      * Il peso delle recensioni recenti viene normalizzato rispetto al massimo peso
      * delle recensioni recenti per un hotel nella stessa città.
      */
+   
+    /**
+     * Updates the ranking of hotels based on their reviews and ratings.
+     * 
+     * @return A map containing the best hotel for each city after the ranking update.
+     */
     @SuppressWarnings("unused")
     public Map<String, Hotel> updateRanking() {
         Map<String, Hotel> newBest = new HashMap<String, Hotel>();
@@ -219,7 +219,7 @@ public class HotelManagement {
         // create a map to group hotels by city
         Map<String, List<Hotel>> hotelsByCity = this.groupByCity();
 
-        // calculate weight for recency (for each city)
+        // calculate weight for recency (for each city) and check if local top hotel changed
         for (String currentCity : hotelsByCity.keySet()) {
             List<Hotel> cityHotels = hotelsByCity.get(currentCity);
             // max number of review of an hotel in that city (is 1 in case of the list is
@@ -240,8 +240,8 @@ public class HotelManagement {
                 }
             }
 
-            // compute rank value for each hotel
             Map<String, Double> rankValues = new HashMap<String, Double>();
+            // compute rank value for each hotel
             for (Hotel hotel : cityHotels) {
                 // get the average rate
                 double avgRate = hotel.getRate();
@@ -290,8 +290,7 @@ public class HotelManagement {
                 this.bestHotels.put(currentCity, cityHotels.get(0));
                 
                 newBest.put(currentCity, cityHotels.get(0));
-            }
-            
+            }  
         }
 
         return newBest;
@@ -302,11 +301,16 @@ public class HotelManagement {
      *         high rank hotel
      */
     public Map<String, String> firstLocalHotels() {
+        // TODO -  serve? se non serve eliminare (o se si può sostituire insomma)
         // this list will contain all the first local Hotel ids
         Map<String, String> hotelsId = new HashMap<String, String>();
         Map<String, List<Hotel>> hotelByCity = this.groupByCity();
+
+        // for each city, get the first hotel with rank 1
         for (String city : hotelByCity.keySet()) {
             List<Hotel> cityHotels = hotelByCity.get(city);
+
+            // search the first hotel with rank 1
             for (Hotel hotel : cityHotels) {
                 if (hotel.getRank() == 1) {
                     hotelsId.put(city, hotel.getId());
@@ -345,6 +349,14 @@ public class HotelManagement {
         return hotelsByCity;
     }
 
+    /**
+     * Calculates the recent weight of a hotel based on its reviews.
+     * The recent weight is calculated by assigning a weight to each review based on its recency.
+     * The weight decreases as the time elapsed since the review increases.
+     * 
+     * @param hotel The hotel for which to calculate the recent weight.
+     * @return The recent weight of the hotel.
+     */
     private double calculateRecentWeight(Hotel hotel) {
         double weight = 0.0;
         long currentTime = System.currentTimeMillis();

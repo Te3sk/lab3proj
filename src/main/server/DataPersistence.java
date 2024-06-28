@@ -11,16 +11,11 @@ import main.dataModels.JsonUtil;
 import main.dataModels.User;
 
 public class DataPersistence {
-    // todo - attributes
-
     /**
-     * constructor for a DataPersistent obj
+     * constructor for a DataPersistent obj (empty)
      */
     public DataPersistence() {
-        // todo - DataPersistence.constructor
-    }
-
-    
+    } 
 
     /**
      * Save user datas in a JSON file

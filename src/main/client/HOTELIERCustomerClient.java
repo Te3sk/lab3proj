@@ -1,6 +1,8 @@
 package main.client;
 
 import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.MulticastSocket;
@@ -47,6 +49,8 @@ public class HOTELIERCustomerClient {
     private Boolean isConnect;
 
     private Lock lock = new ReentrantLock();
+    private Thread notificationThread;
+    private NotificationReciever notificationReciever;
 
     private Set<String> errors = new HashSet<String>();
 
@@ -87,6 +91,10 @@ public class HOTELIERCustomerClient {
                 this.notificator.joinGroup(udpAddr);
                 this.executorService = Executors.newSingleThreadExecutor();
             }
+
+            // initialize notification thread
+            this.notificationReciever = new NotificationReciever(udpAddr, multicastPort, this.lock);
+            this.notificationThread = new Thread(this.notificationReciever);
         } catch (IOException e) {
             throw new Exception(e.getMessage());
         } catch (Exception e) {
@@ -148,6 +156,8 @@ public class HOTELIERCustomerClient {
 
         // this.handleUser();
     }
+
+    // COMUNICATION METHODS
 
     /**
      * Handles the user interaction in the HOTELIER customer client.
@@ -403,8 +413,92 @@ public class HOTELIERCustomerClient {
         // reset the interesting option for no operation
         socketChannel.keyFor(selector).interestOps(0);
     }
+    
+    /**
+     * The `NotificationReciever` class is responsible for handling incoming notifications in a separate thread.
+     * It listens for incoming UDP packets, extracts the message, and handles the notification.
+     * If an error occurs during the notification receiving process, an error message is printed.
+     */
+    protected class NotificationReciever implements Runnable {
+        private InetAddress udpAddr;
+        private int udpPort;
+        private boolean isRunning = true;
+        private Lock lock;
 
-    // TODO - RECIEVE NOTIFICATION UDP
+
+        /**
+         * Constructs a new NotificationReciever object with the specified UDP address and port.
+         *
+         * @param udpAddr the UDP address to bind the receiver to
+         * @param udpPort the UDP port to bind the receiver to
+         */
+        public NotificationReciever(InetAddress udpAddr, int udpPort, Lock lock) {
+            this.udpAddr = udpAddr;
+            this.udpPort = udpPort;
+            this.lock = lock;
+        }
+
+        /**
+         * Executes the logic for handling incoming notifications.
+         * This method runs in a separate thread and listens for incoming UDP packets.
+         * When a packet is received, it extracts the message and handles the notification.
+         * If an error occurs during the notification receiving process, an error message is printed.
+         */
+        @Override
+        public void run() {
+            DatagramSocket udpSock = null;
+
+            try {
+                udpSock = new DatagramSocket(this.udpPort, this.udpAddr);
+
+                while (isRunning) {
+                    byte[] receiveData = new byte[1024];
+                    DatagramPacket packet = new DatagramPacket(receiveData, receiveData.length);
+
+                    udpSock.receive(packet);
+
+                    String msg = new String(packet.getData(), 0, packet.getLength());
+
+                    // take the lock before handling the notification
+                    this.lock.lock();
+                    // * Log message *
+                    System.out.println("----------------------------\n New top hotel in local ranking:\n" + msg + "\n----------------------------");
+                    // release the lock after handling the notification
+                    this.lock.unlock();
+                }
+            } catch (Exception e) {
+                // ! Error message !
+                System.out.println("Error during notification receiving: " + e.getMessage());
+            } finally {
+                if (udpSock != null) {
+                    udpSock.close();
+                }
+            }
+        }
+        
+        /**
+         * Stops the notification receiver.
+         */
+        public void stop() {
+            this.isRunning = false;
+        }
+    }
+    
+    /**
+     * Stops the notification functionality.
+     * If the notification receiver is running, it will be stopped and the notification thread will be joined.
+     */
+    protected void stopNotification() {
+        if (this.notificationReciever != null) {
+            this.notificationReciever.stop();
+            try{
+                this.notificationThread.join();
+            } catch (InterruptedException e) {
+                // ! Error message !
+                System.out.println("Error during stopping notification thread: " + e.getMessage());
+            }
+        }
+    }
 
     // OPERATION METHODS
 
@@ -480,6 +574,9 @@ public class HOTELIERCustomerClient {
             }
         }
 
+        // once the user is logged, start the notification thread
+        this.notificationThread.start();
+
         this.handleUser();
     }
 
@@ -512,6 +609,8 @@ public class HOTELIERCustomerClient {
             System.out.println("* DEBUG (CustomerClient.logout)- \tno error finded in response\n\t" + response);
             this.logged = false;
             this.username = null;
+
+            this.stopNotification();
         } else {
             // TODO - temp debug print
             System.out.println("* DEBUG (CustomerClient.logout)- \terror finded in response\n\t" + response);
@@ -674,7 +773,13 @@ public class HOTELIERCustomerClient {
             }
         }
     }
-
+    
+    /**
+     * Shuts down the client, performing necessary cleanup operations.
+     * If the user is logged in, it logs out the user.
+     * Closes the socket channel, selector, and multicast socket if they are open.
+     * Sets the connection status to false.
+     */
     public void quit() {
         // * Log message *
         System.out.println("Shutting down the client...");
@@ -696,17 +801,7 @@ public class HOTELIERCustomerClient {
             }
 
             // close the multicast socket if is open
-            if (this.notificator != null && !this.executorService.isShutdown()) {
-                this.executorService.shutdown();
-                try {
-                    // wait for the executor service to terminate
-                    if (!this.executorService.awaitTermination(60, TimeUnit.SECONDS)) {
-                        this.executorService.shutdownNow();
-                    }
-                } catch (InterruptedException e) {
-                    this.executorService.shutdownNow();
-                }
-            }
+            this.stopNotification();
 
             this.isConnect = false;
             // * Log message *
