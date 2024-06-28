@@ -10,6 +10,7 @@ import java.util.Set;
 
 import main.dataModels.Review;
 
+// TODO - remove (2) login option in homepage when user is logged
 // TODO - user can't insert a username with "_" char, handle it
 
 public class CLI {
@@ -206,9 +207,18 @@ public class CLI {
         // get the global rate
         while (rate < 0.0 || rate > 5.0) {
             System.out.println("Global Rate (between 0.0 and 5.0 - can use decimal point number):");
-            rate = this.sc.nextDouble();
-            // clear the buffer
-            this.sc.nextLine();
+            
+            if (this.sc.hasNextDouble()) {
+                rate = this.sc.nextDouble();
+                
+                // clear the buffer
+                this.sc.nextLine();
+            } else {
+                this.sc.next();
+                rate = -1.0;
+                // * Log message *
+                System.out.println("Invalid input: type a double between 0.0 and 5.0");
+            }
         }
 
         // TODO - temp debug print
@@ -217,9 +227,19 @@ public class CLI {
         // get the cleaning rate
         while (temp < 0 || temp > 5) {
             System.out.println("Cleaning Rate (between 0 and 5 - integer):");
-            temp = this.sc.nextInt();
-            // clear the buffer
-            this.sc.nextLine();
+
+            if (this.sc.hasNextInt()) {
+                temp = this.sc.nextInt();
+
+                // clear the buffer
+                this.sc.nextLine();
+            } else {
+                this.sc.next();
+                temp = -1;
+                // * Log message *
+                System.out.println("Invalid input: type an integer between 0 and 5");
+            
+            }
         }
         ratings.put("cleaning", temp);
         temp = -1;
@@ -230,9 +250,18 @@ public class CLI {
         // get the position rate
         while (temp < 0 || temp > 5) {
             System.out.println("Position Rate (between 0 and 5 - integer):");
-            temp = this.sc.nextInt();
-            // clear the buffer
-            this.sc.nextLine();
+            if (this.sc.hasNextInt()) {
+                temp = this.sc.nextInt();
+
+                // clear the buffer
+                this.sc.nextLine();
+            } else {
+                this.sc.next();
+                temp = -1;
+                // * Log message *
+                System.out.println("Invalid input: type an integer between 0 and 5");
+            
+            }
         }
         ratings.put("position", temp);
         temp = -1;
@@ -240,9 +269,18 @@ public class CLI {
         // get the services rate
         while (temp < 0 || temp > 5) {
             System.out.println("Services Rate (between 0 and 5 - integer):");
-            temp = this.sc.nextInt();
-            // clear the buffer
-            this.sc.nextLine();
+            if (this.sc.hasNextInt()) {
+                temp = this.sc.nextInt();
+
+                // clear the buffer
+                this.sc.nextLine();
+            } else {
+                this.sc.next();
+                temp = -1;
+                // * Log message *
+                System.out.println("Invalid input: type an integer between 0 and 5");
+            
+            }
         }
         ratings.put("services", temp);
         temp = -1;
@@ -250,9 +288,18 @@ public class CLI {
         // get the quality rate
         while (temp < 0 || temp > 5) {
             System.out.println("Quality Rate (between 0 and 5 - integer):");
-            temp = this.sc.nextInt();
-            // clear the buffer
-            this.sc.nextLine();
+            if (this.sc.hasNextInt()) {
+                temp = this.sc.nextInt();
+
+                // clear the buffer
+                this.sc.nextLine();
+            } else {
+                this.sc.next();
+                temp = -1;
+                // * Log message *
+                System.out.println("Invalid input: type an integer between 0 and 5");
+            
+            }
         }
         ratings.put("quality", temp);
         temp = -1;

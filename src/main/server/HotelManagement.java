@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import main.dataModels.Hotel;
 import main.dataModels.Capitals;
@@ -16,7 +17,8 @@ public class HotelManagement {
     private String hotelPath;
     /** map as (key:hotel.id, value:Hotel) */
     private Map<String, Hotel> hotels;
-    // // // private File hotelFile;
+    private Map<String, Hotel> bestHotels;
+
     private DataPersistence dataPersistence;
 
     /**
@@ -106,7 +108,9 @@ public class HotelManagement {
      * @param nomeCittà city of the hotel
      * @param review    the review (obj) you want to add
      */
-    public void addReview(String nomeHotel, String nomeCittà, Review review) throws Exception {
+    public Map<String, Hotel> addReview(String nomeHotel, String nomeCittà, Review review) throws Exception {
+        // TODO - temp debug print
+        System.out.println("* DEBUG - \tENTER IN HOTELMANAGEMENT.ADDREVIEW");
         // check if hotel exists and find it
         String currentId = "empty";
 
@@ -121,10 +125,11 @@ public class HotelManagement {
             throw new Exception("HOTEL");
         }
 
-        // todo - capire se così va bene, se current punta allo stesso indirizzo di
-        // todo - quello nella lista (quindi cambia automaticamente) o se va aggiornato
-        // todo - quello nella lista
         Hotel current = this.hotels.get(currentId);
+
+        // TODO - temp debug print
+        System.out.println("* DEBUG (hotelManagement.addReview) - \tcurrent: " + System.identityHashCode(current) + "\n\tsrchot: " + System.identityHashCode(this.hotels.get(currentId)));
+        
         // add the review in the list reviews
         current.addReview(review);
 
@@ -140,6 +145,9 @@ public class HotelManagement {
 
         current.setRate(newRate);
         current.setRatings(newRatings);
+
+        // update the rank of the hotel
+        return this.updateRanking();
     }
 
     /**
@@ -205,7 +213,9 @@ public class HotelManagement {
      * delle recensioni recenti per un hotel nella stessa città.
      */
     @SuppressWarnings("unused")
-    public void updateRanking() {
+    public Map<String, Hotel> updateRanking() {
+        Map<String, Hotel> newBest = new HashMap<String, Hotel>();
+
         // create a map to group hotels by city
         Map<String, List<Hotel>> hotelsByCity = this.groupByCity();
 
@@ -218,7 +228,6 @@ public class HotelManagement {
             double maxRecentWeight = 0.0;
 
             // calculate weights for recency
-
             for (Hotel hotel : cityHotels) {
                 // for each review of the hotel
                 for (Review review : hotel.getReviews()) {
@@ -240,7 +249,7 @@ public class HotelManagement {
                 int reviewCount = hotel.getReviewsNumber();
                 // get the recent weight
                 double recentWeight = calculateRecentWeight(hotel);
-                // todo - levare da qui e scrivere nella doc
+                // TODO - levare da qui e scrivere nella doc
                 // - avgRating è la valutazione media delle recensioni dell'hotel.
                 // - 5.0 è il massimo punteggio possibile per una recensione (assumendo una
                 // scala da 1 a 5).
@@ -266,14 +275,26 @@ public class HotelManagement {
                 Double rank2 = rankValues.get(hotel2.getId());
                 return rank1.compareTo(rank2);
             });
+
+            // update the rank of each hotel
             int i = 1;
             for (Hotel hotel : cityHotels) {
                 this.hotels.get(hotel.getId()).setRank(i);
                 i++;
             }
 
+            // check if best hotel in local ranking changed
+            if (cityHotels.get(0).getId().equals(this.bestHotels.get(currentCity).getId())) {
+                // update the best hotel in local ranking
+                this.bestHotels.remove(currentCity);
+                this.bestHotels.put(currentCity, cityHotels.get(0));
+                
+                newBest.put(currentCity, cityHotels.get(0));
+            }
+            
         }
-        // todo - send notification to logged users
+
+        return newBest;
     }
 
     /**

@@ -18,6 +18,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
 import main.dataModels.Review;
 
 import java.nio.channels.Selector;
@@ -42,6 +45,8 @@ public class HOTELIERCustomerClient {
     private ExecutorService executorService;
     private Map<Integer, String> op = new HashMap<Integer, String>();
     private Boolean isConnect;
+
+    private Lock lock = new ReentrantLock();
 
     private Set<String> errors = new HashSet<String>();
 
@@ -134,7 +139,14 @@ public class HOTELIERCustomerClient {
             System.out.println("key is not null");
         }
 
-        this.handleUser();
+        // TODO - temp test
+        System.out.println("TEMP DEBUG LOGIN AS nicco");
+        try{
+            this.login("nicco", "nicco");
+        } catch (Exception e) {}
+
+
+        // this.handleUser();
     }
 
     /**
@@ -154,6 +166,9 @@ public class HOTELIERCustomerClient {
 
         while (this.isConnect) {
             int n = -1;
+
+            // get the condition variable
+            this.lock.lock();
 
             if (this.logged) {
                 n = this.cli.homePage(this.username);
@@ -251,6 +266,8 @@ public class HOTELIERCustomerClient {
                 default:
                     break;
             }
+
+            this.lock.unlock();
         }
     }
 
@@ -386,6 +403,8 @@ public class HOTELIERCustomerClient {
         // reset the interesting option for no operation
         socketChannel.keyFor(selector).interestOps(0);
     }
+
+    // TODO - RECIEVE NOTIFICATION UDP
 
     // OPERATION METHODS
 

@@ -20,9 +20,12 @@ import java.util.concurrent.TimeUnit;
 
 public class HOTELIERServer implements Runnable {
     private long timeInterval;
-    private NotificationService notificationService;
+    // private NotificationService notificationService;
     private Selector selector;
+    private InetAddress tcpAddr;
     private int tcpPort;
+    private InetAddress udpAddr;
+    private int udpPort;
     private boolean isRunning;
     private ServerSocketChannel serverSocketChannel;
     private UserManagement userManagement;
@@ -45,10 +48,14 @@ public class HOTELIERServer implements Runnable {
     public HOTELIERServer(InetAddress tcpAddr, InetAddress udpAddr, int tcpPort, long interval, int broadcastPort,
             String hotelFile, String userFile) {
         try {
+            this.tcpAddr = tcpAddr;
+            this.tcpPort = tcpPort;
+            this.udpAddr = udpAddr;
+            this.udpPort = broadcastPort;
             this.timeInterval = interval;
             this.hotelManagement = new HotelManagement(hotelFile);
             this.userManagement = new UserManagement(userFile);
-            this.notificationService = new NotificationService(hotelManagement, udpAddr, broadcastPort);
+            // this.notificationService = new NotificationService(hotelManagement, udpAddr, broadcastPort);
             this.serverSocketChannel = ServerSocketChannel.open();
             this.serverSocketChannel.configureBlocking(false);
             this.serverSocketChannel.bind(new InetSocketAddress(tcpAddr, tcpPort));
@@ -137,7 +144,7 @@ public class HOTELIERServer implements Runnable {
 
                         // add new request handler to the list
                         this.requestHandlers.add(new RequestHandler(this.userManagement, this.hotelManagement,
-                                connection, this.selector));
+                                connection, this.selector, this.udpAddr, this.udpPort));
                     } else if (key.isReadable()) {
                         // get the connection from the key
                         SocketChannel connection = (SocketChannel) key.channel();

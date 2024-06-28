@@ -20,6 +20,8 @@ public class DataPersistence {
         // todo - DataPersistence.constructor
     }
 
+    
+
     /**
      * Save user datas in a JSON file
      *

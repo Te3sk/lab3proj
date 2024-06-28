@@ -1,6 +1,9 @@
 package main.server;
 
 import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
@@ -11,6 +14,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import main.dataModels.Hotel;
@@ -38,6 +42,9 @@ import main.dataModels.Review;
 // invalid format - FORMAT
 
 public class RequestHandler implements Runnable {
+    private InetAddress udpAddr;
+    private int udpPort;
+
     private String type;
     private SocketChannel callerAddress;
     private String username;
@@ -245,11 +252,13 @@ public class RequestHandler implements Runnable {
 
     // CONSTRUCTORS
     public RequestHandler(UserManagement userManagement, HotelManagement hotelManagement, SocketChannel socketChannel,
-            Selector selector) {
+            Selector selector, InetAddress udpAddr, int udpPort) {
         this.userManagement = userManagement;
         this.hotelManagement = hotelManagement;
         this.callerAddress = socketChannel;
         this.selector = selector;
+        this.udpAddr = udpAddr;
+        this.udpPort = udpPort;
 
         // set error messages
         this.errors.add("USERN_Y");
@@ -460,18 +469,37 @@ public class RequestHandler implements Runnable {
         this.review = review;
 
         // TODO - temp debug print
-        System.out.println("* DEBUG (insertReview)- \t review:\n\t" + this.review.toString());
+        System.out.println("* DEBUG (insertReview)- \t review:\n\t" + this.review.printReview());
 
         try {
-            hotelManagement.addReview(this.getHotelName(), this.getCityName(), this.getReview());
+            // TODO - temp debug print
+            System.out.println("* DEBUG (insertReview) - \tTRY BRANCH");
+            Map<String, Hotel> newBest = hotelManagement.addReview(this.getHotelName(), this.getCityName(), this.getReview());
             // TODO - temp debug print
             System.out.println("* DEBUG - \t Review added correctly.");
             this.write("Review added correctly.");
+
+            if (newBest != null) {
+                String newBestString = "";
+
+                for (Hotel hotel : newBest.values()) {
+                    newBestString += "\t" + hotel.getCity() + "\n" + (hotel.toString() + "\n-------------------\n");
+                }
+
+                this.sendNotification(newBestString);
+            }
+
         } catch (IOException e) {
+            // TODO - temp debug print
+            System.out.println("* DEBUG (insertReview)- \tioexception branch");
             // ! Error message !
             System.out.println(e.getMessage());
         } catch (Exception e) {
+            // TODO - temp debug print
+            System.out.println("* DEBUG (insertReview) - \tgeneric excepion branch");
             try {
+                // TODO - temp debug print
+                System.out.println("* \t" + e.getMessage());
                 this.write(e.getMessage());
             } catch (IOException f) {
                 // ! Error message !
@@ -510,6 +538,34 @@ public class RequestHandler implements Runnable {
     }
 
     // COMUNICATIONS METHODS
+
+    /**
+     * Sends a notification message using UDP protocol.
+     * 
+     * @param msg the message to be sent
+     */
+    protected void sendNotification(String msg) {
+        DatagramSocket udpSock = null;
+
+        try {
+            udpSock = new DatagramSocket();
+
+            byte[] sendData = msg.getBytes();
+            DatagramPacket packet = new DatagramPacket(sendData, sendData.length, this.udpAddr, this.udpPort);
+
+            udpSock.send(packet);
+
+            // * Log message *
+            System.out.println("Notifica di aggiornamento ranking locali inviata");
+        } catch (Exception e) {
+            // ! Error message !
+            System.out.println("Error during notification sending: " + e.getMessage());
+        } finally {
+            if (udpSock != null) {
+                udpSock.close();
+            }
+        }
+    }
 
     /**
      * Reads a client message

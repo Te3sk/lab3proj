@@ -1,5 +1,6 @@
 package main.dataModels;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -189,6 +190,10 @@ public class Hotel {
      * @param review the review you want to add
      */
     public void addReview(Review review) {
+        if (this.reviews == null) {
+            this.reviews = new ArrayList<Review>();
+        }
+
         this.reviews.add(review);
     }
 
