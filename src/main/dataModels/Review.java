@@ -8,14 +8,6 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.Map;
 
-// "rate": 0,
-// "ratings": {
-//     "cleaning": 0,
-//     "position": 0,
-//     "services": 0,
-//     "quality": 0
-// }
-
 public class Review {
     private double rate;
     private Map<String, Integer> ratings;

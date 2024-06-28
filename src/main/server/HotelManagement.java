@@ -6,11 +6,18 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import main.dataModels.Hotel;
 import main.dataModels.Capitals;
 import main.dataModels.Review;
 
+/**
+ * The HotelManagement class represents a hotel management system.
+ * It is responsible for loading hotel data, managing hotels, and providing
+ * various operations related to hotel management.
+ */
 public class HotelManagement {
     /** path of the JSON file with all the hotels */
     private String hotelPath;
@@ -19,14 +26,19 @@ public class HotelManagement {
     private Map<String, Hotel> bestHotels;
 
     private DataPersistence dataPersistence;
+    private Lock lock;
 
     /**
-     * constructor
+     * Constructs a new instance of the HotelManagement class.
+     * 
+     * @param hotelPath The path to the hotel data file.
      */
     public HotelManagement(String hotelPath) {
         this.hotelPath = hotelPath;
         this.dataPersistence = new DataPersistence();
         this.hotels = dataPersistence.loadHotels(hotelPath);
+
+        this.lock = new ReentrantLock();
     }
 
     /**
@@ -40,6 +52,9 @@ public class HotelManagement {
      * @throws HOTEL  if can't find the hotel
      */
     public Hotel searchHotel(String hotelName, String city) throws Exception {
+        // get the lock
+        this.lock.lock();
+
         // check hotel parameter validity and hotel existency
         if (hotelName == null || hotelName.isEmpty() || city == null || city.isEmpty()) {
             throw new Exception("EMPTYF");
@@ -53,9 +68,15 @@ public class HotelManagement {
         // search hotel
         for (Hotel hotel : this.hotels.values()) {
             if (city.equals(hotel.getCity()) && hotelName.equals(hotel.getName())) {
+                // release the lock
+                this.lock.unlock();
+
                 return hotel;
             }
         }
+
+        // release the lock
+        this.lock.unlock();
 
         // if can't find the hotel throws exception
         throw new Exception("HOTEL");
@@ -69,6 +90,9 @@ public class HotelManagement {
      *         found
      */
     public List<Hotel> searchHotelByCity(String city) throws Exception {
+        // get the lock
+        this.lock.lock();
+
         // check city validity if the city is one of the rightones
         if (city == null || city.isEmpty() || !Capitals.isValidCapital(city)) {
             throw new Exception("CITY");
@@ -84,8 +108,14 @@ public class HotelManagement {
         }
 
         if (hotelInCity.size() <= 0) {
+            // release the lock
+            this.lock.unlock();
+
             return null;
         }
+
+        // release the lock
+        this.lock.unlock();
 
         return hotelInCity;
     }
@@ -105,6 +135,9 @@ public class HotelManagement {
      * @param review    the review (obj) you want to add
      */
     public Map<String, Hotel> addReview(String nomeHotel, String nomeCittà, Review review) throws Exception {
+        // get the lock
+        this.lock.lock();
+
         // check if hotel exists and find it
         String currentId = "empty";
 
@@ -140,6 +173,9 @@ public class HotelManagement {
         current.setRate(newRate);
         current.setRatings(newRatings);
 
+        // release the lock
+        this.lock.unlock();
+
         // update the rank of the hotel
         return this.updateRanking();
     }
@@ -152,6 +188,9 @@ public class HotelManagement {
      * @return a list of Review obj
      */
     public List<Review> getReviews(String nomeHotel, String nomeCittà) throws Exception {
+        // get the lock
+        this.lock.lock();
+
         // check if hotel exists and find it
         String currentId = "empty";
 
@@ -165,17 +204,23 @@ public class HotelManagement {
 
         // check if the hotel exists
         if (currentId.equals("empty")) {
+            // release the lock
+            this.lock.unlock();
+
             throw new Exception("HOTEL");
         }
 
         // get the reviews of the hotel
         Hotel current = this.hotels.get(currentId);
 
+        // release the lock
+        this.lock.unlock();
+
         return current.getReviews();
     }
 
     // TODO - levare da qua, scrivere nella relazione
-    /** 
+    /**
      * Per implementare il metodo che aggiorna il rank di ogni hotel nella classe
      * HotelManagement, possiamo adottare un algoritmo che combina la qualità, la
      * quantità e l'attualità delle recensioni per ciascun hotel. La qualità può
@@ -206,20 +251,25 @@ public class HotelManagement {
      * Il peso delle recensioni recenti viene normalizzato rispetto al massimo peso
      * delle recensioni recenti per un hotel nella stessa città.
      */
-   
+
     /**
      * Updates the ranking of hotels based on their reviews and ratings.
      * 
-     * @return A map containing the best hotel for each city after the ranking update.
+     * @return A map containing the best hotel for each city after the ranking
+     *         update.
      */
     @SuppressWarnings("unused")
     public Map<String, Hotel> updateRanking() {
+        // get the lock
+        this.lock.lock();
+
         Map<String, Hotel> newBest = new HashMap<String, Hotel>();
 
         // create a map to group hotels by city
         Map<String, List<Hotel>> hotelsByCity = this.groupByCity();
 
-        // calculate weight for recency (for each city) and check if local top hotel changed
+        // calculate weight for recency (for each city) and check if local top hotel
+        // changed
         for (String currentCity : hotelsByCity.keySet()) {
             List<Hotel> cityHotels = hotelsByCity.get(currentCity);
             // max number of review of an hotel in that city (is 1 in case of the list is
@@ -288,38 +338,15 @@ public class HotelManagement {
                 // update the best hotel in local ranking
                 this.bestHotels.remove(currentCity);
                 this.bestHotels.put(currentCity, cityHotels.get(0));
-                
+
                 newBest.put(currentCity, cityHotels.get(0));
-            }  
-        }
-
-        return newBest;
-    }
-
-    /**
-     * @return a map <key:city, value:hotelId> that associated a city with the most
-     *         high rank hotel
-     */
-    public Map<String, String> firstLocalHotels() {
-        // TODO -  serve? se non serve eliminare (o se si può sostituire insomma)
-        // this list will contain all the first local Hotel ids
-        Map<String, String> hotelsId = new HashMap<String, String>();
-        Map<String, List<Hotel>> hotelByCity = this.groupByCity();
-
-        // for each city, get the first hotel with rank 1
-        for (String city : hotelByCity.keySet()) {
-            List<Hotel> cityHotels = hotelByCity.get(city);
-
-            // search the first hotel with rank 1
-            for (Hotel hotel : cityHotels) {
-                if (hotel.getRank() == 1) {
-                    hotelsId.put(city, hotel.getId());
-                    break;
-                }
             }
         }
 
-        return hotelsId;
+        // release the lock
+        this.lock.unlock();
+
+        return newBest;
     }
 
     /**
@@ -329,6 +356,7 @@ public class HotelManagement {
      *         (string)
      */
     private Map<String, List<Hotel>> groupByCity() {
+
         Map<String, List<Hotel>> hotelsByCity = new HashMap<>();
 
         for (Hotel h : this.hotels.values()) {
@@ -351,7 +379,8 @@ public class HotelManagement {
 
     /**
      * Calculates the recent weight of a hotel based on its reviews.
-     * The recent weight is calculated by assigning a weight to each review based on its recency.
+     * The recent weight is calculated by assigning a weight to each review based on
+     * its recency.
      * The weight decreases as the time elapsed since the review increases.
      * 
      * @param hotel The hotel for which to calculate the recent weight.
@@ -376,7 +405,13 @@ public class HotelManagement {
      * save the hotels infos in the JSON file
      */
     public void saveHotel() {
+        // get the lock
+        this.lock.lock();
+
         List<Hotel> temp = new ArrayList<Hotel>(this.hotels.values());
         dataPersistence.saveHotels(temp, this.hotelPath);
+
+        // release the lock
+        this.lock.unlock();
     }
 }

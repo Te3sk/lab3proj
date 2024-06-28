@@ -20,7 +20,6 @@ import java.util.concurrent.TimeUnit;
 
 public class HOTELIERServer implements Runnable {
     private long timeInterval;
-    // private NotificationService notificationService;
     private Selector selector;
     private InetAddress tcpAddr;
     private int tcpPort;
@@ -55,7 +54,6 @@ public class HOTELIERServer implements Runnable {
             this.timeInterval = interval;
             this.hotelManagement = new HotelManagement(hotelFile);
             this.userManagement = new UserManagement(userFile);
-            // this.notificationService = new NotificationService(hotelManagement, udpAddr, broadcastPort);
             this.serverSocketChannel = ServerSocketChannel.open();
             this.serverSocketChannel.configureBlocking(false);
             this.serverSocketChannel.bind(new InetSocketAddress(tcpAddr, tcpPort));
