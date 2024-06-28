@@ -1,6 +1,5 @@
 package main.client;
 
-import java.io.Console;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -67,7 +66,7 @@ public class CLI {
 
         } else {
             // logout, searchHotel, searchAllHotels, insertReview, showMyBadges
-            valid.add(2);
+            // TODO (check if is the rightone) - valid.add(2);
             valid.add(3);
             valid.add(4);
             valid.add(5);
@@ -95,9 +94,6 @@ public class CLI {
             n = this.sc.nextInt();
         } while (!valid.contains(n));
 
-        // TODO - temp debug print
-        System.out.println("* DEBUG - \tOperazione scelta: " + op.get(n));
-
         return n;
     }
 
@@ -113,7 +109,6 @@ public class CLI {
 
         System.out.println(this.dash + "\n\t" + title + "\n" + this.dash);
 
-        // TODO - buffer cleaning
         // whitout it the first input is skipped
         this.sc.nextLine();
 
@@ -142,7 +137,6 @@ public class CLI {
         String cityName = null;
         System.out.println(this.dash + "\n\tSEARCHING HOTEL (by name and city)\n" + this.dash);
 
-        // TODO - buffer cleaning
         // whitout it the first input is skipped
         this.sc.nextLine();
 
@@ -166,7 +160,6 @@ public class CLI {
         String cityName = null;
         System.out.println(this.dash + "\n\tSEARCHING HOTEL IN A CITY \n" + this.dash);
 
-        // TODO - buffer cleaning
         // whitout it the first input is skipped
         this.sc.nextLine();
 
@@ -183,7 +176,6 @@ public class CLI {
      * @return an array containing the hotel name and the review object
      */
     public Object[] insertReview() {
-        Scanner sc = new Scanner(System.in);
         String hotelName = "";
         String cityName = "";
         Double rate = -1.0;
@@ -192,7 +184,6 @@ public class CLI {
 
         System.out.println(this.dash + "\n\tINSERT REVIEW\n" + this.dash);
 
-        // TODO - buffer cleaning
         // whitout it the first input is skipped
         this.sc.nextLine();
 
@@ -221,9 +212,6 @@ public class CLI {
             }
         }
 
-        // TODO - temp debug print
-        System.out.println("* DEBUG - \tglobale rate: " + rate);
-
         // get the cleaning rate
         while (temp < 0 || temp > 5) {
             System.out.println("Cleaning Rate (between 0 and 5 - integer):");
@@ -243,9 +231,6 @@ public class CLI {
         }
         ratings.put("cleaning", temp);
         temp = -1;
-
-        // TODO - temp debug print
-        System.out.println("* DEBUG - \tcleaning rate: " + temp);
 
         // get the position rate
         while (temp < 0 || temp > 5) {
@@ -307,7 +292,6 @@ public class CLI {
         // compute the date
         Date date = new Date();
 
-        // todo - add city parameter
         Object[] res = new Object[3];
         res[0] = hotelName;
         res[1] = cityName;

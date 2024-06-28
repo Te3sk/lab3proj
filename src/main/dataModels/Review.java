@@ -59,13 +59,13 @@ public class Review {
 
             // check if the single rating is valid (between 0 and 5)
             if (ratings.get(f) < 0 || ratings.get(f) > 5) {
-                // todo - non va bene, capire come tornare un'eccezione/errore e interrompere
+                throw new IllegalArgumentException("Invalid rating value.");
             }
         }
 
         // check if all the valid field was in the review
         if (!field.isEmpty()) {
-            // todo - non va bene, capire come tornare un'eccezione/errore e interrompere
+            throw new IllegalArgumentException("Missing rating field(s).");
         }
 
         // it's all ok
