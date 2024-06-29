@@ -16,9 +16,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.locks.Lock;
 
 import main.dataModels.Hotel;
 import main.dataModels.Review;
+import main.dataModels.User;
 
 public class RequestHandler implements Runnable {
     private InetAddress udpAddr;
@@ -38,20 +40,34 @@ public class RequestHandler implements Runnable {
 
     private UserManagement userManagement;
     private HotelManagement hotelManagement;
+    private DataPersistence dataPersistence;
     private Set<String> errors = new HashSet<String>();
 
     /**
      * Executes the main logic of the RequestHandler in a separate thread.
-     * Continuously reads messages from the client, checks their validity, and dispatches them.
+     * Continuously reads messages from the client, checks their validity, and
+     * dispatches them.
      * If the message is a quit message, the server is terminated.
-     * If the message has an incorrect number of parameters, a "FORMAT" response is sent back to the client.
+     * If the message has an incorrect number of parameters, a "FORMAT" response is
+     * sent back to the client.
      * If the message is valid, it is dispatched to the appropriate handler.
-     * Handles exceptions related to reading from the client and closing the channel.
+     * Handles exceptions related to reading from the client and closing the
+     * channel.
      */
     @Override
     public void run() {
+        // creating thread for saving data
+        Thread backupThread = new Thread(this.dataPersistence);
+
+        // initializing that thread
+        backupThread.start();
+
+        // TODO - temp debug print
+        System.out.println("* DEBUG - \tbackup thread created and initialized");
+
         while (isRunning) {
-            // read message from client, check its validity and dispatch it (handle non correct messages)
+            // read message from client, check its validity and dispatch it (handle non
+            // correct messages)
             try {
                 // convert the message in a simple String
                 String msg = "";
@@ -67,7 +83,7 @@ public class RequestHandler implements Runnable {
                 if (params == 1 && msg.equals("_QUIT")) { // quit message
                     // check if the message is a quit message
                     this.quit();
-                } else if (params < 2 || params > 6) {  // if the message has the wrong number of parameters
+                } else if (params < 2 || params > 6) { // if the message has the wrong number of parameters
                     // else check if the message has the right number of parameters
                     try {
                         this.write("FORMAT");
@@ -101,14 +117,14 @@ public class RequestHandler implements Runnable {
     public void dispatcher(String msg) {
         // split for the "_" character
         String[] parts = msg.split("_");
-        
+
         if (parts.length == 0) { // if the message is empty
-            try{ // empty field message
+            try { // empty field message
                 this.write("EMPTYF");
             } catch (IOException e) {
                 // ! Error message !
                 System.out.println("Error during writing on socket:" + e.getMessage());
-            } 
+            }
         }
 
         try { // check if the message has the right number of parameters
@@ -161,7 +177,7 @@ public class RequestHandler implements Runnable {
                             // ! Error message !
                             System.out.println(e.getMessage());
                         }
-                    break;
+                        break;
                 }
             }
         } catch (Exception e) {
@@ -187,13 +203,16 @@ public class RequestHandler implements Runnable {
 
     // CONSTRUCTORS
     public RequestHandler(UserManagement userManagement, HotelManagement hotelManagement, SocketChannel socketChannel,
-            Selector selector, InetAddress udpAddr, int udpPort) {
+            Selector selector, InetAddress udpAddr, int udpPort, long interval, Lock saverLock) {
         this.userManagement = userManagement;
         this.hotelManagement = hotelManagement;
         this.callerAddress = socketChannel;
         this.selector = selector;
         this.udpAddr = udpAddr;
         this.udpPort = udpPort;
+
+        this.dataPersistence = new DataPersistence(interval, saverLock, this.hotelManagement, this.userManagement);
+        // Thread backupThread = new Thread();
 
         // set error messages
         this.errors.add("USERN_Y");
@@ -204,6 +223,24 @@ public class RequestHandler implements Runnable {
         this.errors.add("CITY");
         this.errors.add("FORMAT");
     }
+
+    // // DATA SAVING
+
+    // public class DataSaver implements Runnable {
+    //     private long interval;
+    //     private Lock lock;
+    //     private HotelManagement hotelManagement;
+    //     private UserManagement userManagement;
+
+    //     public DataSaver(long interval, Lock lock, HotelManagement hotelManagement, UserManagement userManagement) {
+            
+    //     }  
+
+    //     @Override
+    //     public void run(){
+
+    //     }
+    // }
 
     // HANDLING METHODS
 
@@ -350,7 +387,7 @@ public class RequestHandler implements Runnable {
 
         try {
             List<Hotel> hotels = hotelManagement.searchHotelByCity(this.getCityName());
-            
+
             for (Hotel hotel : hotels) {
                 response += (hotel.toString() + "\n-------------------\n");
             }
@@ -384,7 +421,8 @@ public class RequestHandler implements Runnable {
         this.cityName = cityName;
         this.review = review;
         try {
-            Map<String, Hotel> newBest = hotelManagement.addReview(this.getHotelName(), this.getCityName(), this.getReview());
+            Map<String, Hotel> newBest = hotelManagement.addReview(this.getHotelName(), this.getCityName(),
+                    this.getReview());
 
             this.write("Review added correctly.");
 

@@ -10,23 +10,93 @@ import main.dataModels.Hotel;
 import main.dataModels.JsonUtil;
 import main.dataModels.User;
 
-public class DataPersistence {
+import java.util.concurrent.locks.Lock;
+
+public class DataPersistence implements Runnable {
+    private long interval;
+    private Lock lock;
+    private String hotelFilePath;
+    private String userFilePath;
+    private HotelManagement hotelManagement;
+    private UserManagement userManagement;
+
     /**
      * constructor for a DataPersistent obj (empty)
      */
+    public DataPersistence(long interval, Lock lock, HotelManagement hotelManagement, UserManagement userManagement) {
+        // TODO - temp debug print
+        System.out.println("* DEBUG - \tcreting datapersistence for saving data periodically");
+        
+        this.interval = interval;
+        this.lock = lock;
+        this.hotelManagement = hotelManagement;
+        this.userManagement = userManagement;
+    }
+
     public DataPersistence() {
-    } 
+    }
+
+    @Override
+    public void run() {
+        // TODO - implement run
+        // TODO - temp debug print
+        System.out.println("* DEBUG - \trun method for saving started");
+        try {
+            while (true) {
+                // TODO - temp debug print
+                System.out.println("* DEBUG - \tbefore sleep (interval = " + this.interval + ")");
+                Thread.sleep(this.interval);
+                // TODO - temp debug print
+                System.out.println("* DEBUG - \tafter sleep, wait for the lock (" + this.lock.hashCode() + ")");
+
+                // acquire the lock
+                this.lock.lock();
+
+                // TODO - temp debug print
+                System.out.println("* DEBUG - \tlock acquired");
+
+                this.hotelManagement.saveHotel();
+                this.userManagement.saveUsers();
+
+                // release the lock
+                this.lock.unlock();
+                // TODO - temp debug print
+                System.out.println("* DEBUG - \tlock released");
+
+                // TODO - temp debug print
+                System.out.println("* DEBUG - \tsaved data successfully");
+            }
+        } catch (InterruptedException e) {
+            // ! Error message !
+            System.out.println("Interrupted error during data persistence: " + e);
+        } catch (Exception e) {
+            // ! Error message !
+            System.out.println("Unexpected error during data persistence: " + e);
+        }
+
+    }
 
     /**
      * Save user datas in a JSON file
      *
-     * @param users the datas in this format (used in UserManagement)
+     * @param users    the datas in this format (used in UserManagement)
      * @param filePath the path of the JSON file where you want to save the datas
      */
     public void saveUsers(Map<String, User> users, String filePath) {
         try {
+            if(users == null) {
+                // TODO - temp debug print
+                System.out.println("* DEBUG - \tusers null");
+                return;
+            }
             // convert the map in a list
             List<User> temp = new ArrayList<>(users.values());
+
+            if (temp == null) {
+                // TODO - temp debug print
+                System.out.println("* DEBUG - \ttemp user null");
+                return;
+            }
             // save the list in the file
             JsonUtil.serializeListToFile(temp, filePath);
 
@@ -40,11 +110,16 @@ public class DataPersistence {
     /**
      * save hotels datas in a JSON file
      *
-     * @param hotels the datas in this format (used in HotelManagement)
+     * @param hotels   the datas in this format (used in HotelManagement)
      * @param filePath the path of the JSON file where you want to save the datas
      */
     public void saveHotels(List<Hotel> hotels, String filePath) {
         try {
+            if (hotels == null) {
+                // TODO - temp debug print
+                System.out.println("* DEBUG - \thotels null");
+                return;
+            }
             JsonUtil.serializeListToFile(hotels, filePath);
         } catch (Exception e) {
             System.out.println("Error during hotels saving: " + e);
@@ -55,7 +130,8 @@ public class DataPersistence {
      * load users datas from a JSON file
      *
      * @param filePath the path of the JSON file where you want to load the datas
-     * @return a mapping <username, user> with all the datas (same format of UserManagement)
+     * @return a mapping <username, user> with all the datas (same format of
+     *         UserManagement)
      */
     public Map<String, User> loadUsers(String filePath) {
         try {
@@ -80,7 +156,8 @@ public class DataPersistence {
      *
      *
      * @param filePath the path of the JSON file where you want to load the datas
-     * @return a mapping <hotelId, hotel> with all the datas (same format of HotelManagement)
+     * @return a mapping <hotelId, hotel> with all the datas (same format of
+     *         HotelManagement)
      */
     public Map<String, Hotel> loadHotels(String filePath) {
         try {

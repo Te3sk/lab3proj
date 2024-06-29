@@ -3,6 +3,7 @@ package main.dataModels;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
+import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -22,6 +23,12 @@ public class JsonUtil {
      * @throws IOException if occour an error during the writing
      */
     public static <T> void serializeListToFile(List<T> list, String filePath) throws IOException {
+        File file = new File(filePath);
+        if (!file.exists()) {
+            // TODO - temp debug print
+            System.out.println("* DEBUG - \tdio cane");
+            return;
+        }
         try (FileWriter writer = new FileWriter(filePath)) {
             gson.toJson(list, writer);
         }

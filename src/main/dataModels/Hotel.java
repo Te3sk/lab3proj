@@ -185,7 +185,11 @@ public class Hotel {
      * @return the number of review of this hotel
      */
     public int getReviewsNumber() {
-        return reviews.size();
+        if (this.reviews == null) {
+            return 0;
+        } else {
+            return reviews.size();
+        }
     }
 
     /**

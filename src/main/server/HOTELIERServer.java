@@ -16,7 +16,8 @@ import java.util.Timer;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-// // import java.io.File;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class HOTELIERServer implements Runnable {
     private long timeInterval;
@@ -30,6 +31,8 @@ public class HOTELIERServer implements Runnable {
     private UserManagement userManagement;
     private HotelManagement hotelManagement;
     private List<RequestHandler> requestHandlers;
+    private DataPersistence dataPersistence;
+    private Lock lock = new ReentrantLock();
 
     /**
      * HOTELIERServer constructor: to start the server properly, the start method
@@ -132,7 +135,13 @@ public class HOTELIERServer implements Runnable {
 
                         // add new request handler to the list
                         this.requestHandlers.add(new RequestHandler(this.userManagement, this.hotelManagement,
-                                connection, this.selector, this.udpAddr, this.udpPort));
+                                connection, this.selector, this.udpAddr, this.udpPort, this.timeInterval,this.lock));
+
+                        // // TODO - creating thread for saving data
+                        // Thread backupThread = new Thread(this.dataPersistence);
+
+                        // // TODO - initializing that thread
+                        // backupThread.start();
                     } else if (key.isReadable()) { // else if the key's channel is ready to read data
                         // get the connection from the key
                         SocketChannel connection = (SocketChannel) key.channel();
@@ -159,4 +168,6 @@ public class HOTELIERServer implements Runnable {
         executor.close();
         executor.shutdown();
     }
+
+    // TODO - handling server.close
 }

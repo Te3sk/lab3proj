@@ -14,6 +14,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Properties;
 
+// TODO - try to change add review protocol: instead of recieve all and send to the server, try to take city and hotel, send it to the server, and then take review values. Doing like that the user can recieve no city founded exception before take values
+
 public class ClientMain {
     public static void main(String[] args) {
         // take args (from a config file)

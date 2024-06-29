@@ -52,16 +52,32 @@ public class HotelManagement {
      * @throws HOTEL  if can't find the hotel
      */
     public Hotel searchHotel(String hotelName, String city) throws Exception {
+        // TODO - temp debug print
+        System.out.println("* DEBUG (hotelmanagement.searchhotel) - \tlock acquired");
+
         // get the lock
         this.lock.lock();
 
         // check hotel parameter validity and hotel existency
         if (hotelName == null || hotelName.isEmpty() || city == null || city.isEmpty()) {
+
+            // release the lock
+            this.lock.unlock();
+
+            // TODO - temp debug print
+            System.out.println("* DEBUG (hotelManagement.searchhotel) - \tlock released");
+
             throw new Exception("EMPTYF");
         }
 
         // check city validity if the city is one of the rightones
         if (city == null || city.isEmpty() || !Capitals.isValidCapital(city)) {
+            // release the lock
+            this.lock.unlock();
+
+            // TODO - temp debug print
+            System.out.println("* DEBUG (hotelManagement.searchhotel) - \tlock released");
+
             throw new Exception("CITY");
         }
 
@@ -71,12 +87,18 @@ public class HotelManagement {
                 // release the lock
                 this.lock.unlock();
 
+                // TODO - temp debug print
+                System.out.println("* DEBUG (hotelManagement.searchhotel) - \tlock released");
+
                 return hotel;
             }
         }
 
         // release the lock
         this.lock.unlock();
+
+        // TODO - temp debug print
+        System.out.println("* DEBUG (hotelManagement.searchhotel) - \tlock released");
 
         // if can't find the hotel throws exception
         throw new Exception("HOTEL");
@@ -93,8 +115,17 @@ public class HotelManagement {
         // get the lock
         this.lock.lock();
 
+        // TODO - temp debug print
+        System.out.println("* DEBUG (hotelmanagement.searchhotelbycity) - \tlock acquired");
+
         // check city validity if the city is one of the rightones
         if (city == null || city.isEmpty() || !Capitals.isValidCapital(city)) {
+            // release the lock
+            this.lock.unlock();
+
+            // TODO - temp debug print
+            System.out.println("* DEBUG (hotelManagement.searchhotelbycity) - \tlock released");
+
             throw new Exception("CITY");
         }
 
@@ -111,11 +142,17 @@ public class HotelManagement {
             // release the lock
             this.lock.unlock();
 
+            // TODO - temp debug print
+            System.out.println("* DEBUG (hotelManagement.searchhotelbycity) - \tlock released");
+
             return null;
         }
 
         // release the lock
         this.lock.unlock();
+
+        // TODO - temp debug print
+        System.out.println("* DEBUG (hotelManagement.searchHotelbycity) - \tlock released");
 
         return hotelInCity;
     }
@@ -138,43 +175,57 @@ public class HotelManagement {
         // get the lock
         this.lock.lock();
 
-        // check if hotel exists and find it
-        String currentId = "empty";
+        try {
+            // TODO - temp debug print
+            System.out.println("* DEBUG (hotelmanagement.addReview) - \tlock acquired");
 
-        // search the hotel
-        for (Hotel hotel : this.hotels.values()) {
-            if (nomeHotel.equals(hotel.getName()) && nomeCittà.equals(hotel.getCity())) {
-                currentId = hotel.getId();
-                break;
+            // check if hotel exists and find it
+            String currentId = "empty";
+
+            // search the hotel
+            for (Hotel hotel : this.hotels.values()) {
+                if (nomeHotel.equals(hotel.getName()) && nomeCittà.equals(hotel.getCity())) {
+                    currentId = hotel.getId();
+                    break;
+                }
             }
+
+            // check if the hotel exists
+            if (currentId.equals("empty")) {
+                // release the lock
+                this.lock.unlock();
+
+                // TODO - temp debug print
+                System.out.println("* DEBUG (hotelManagement.searchhotelbycity) - \tlock released");
+
+                throw new Exception("HOTEL");
+            }
+
+            Hotel current = this.hotels.get(currentId);
+
+            // add the review in the list reviews
+            current.addReview(review);
+
+            // calculate and set new average rate and ratings
+            int size = current.getReviewsNumber();
+
+            // calculate the new rate and ratings
+            double newRate = (current.getRate() + review.getRate()) / size;
+            Map<String, Integer> newRatings = new HashMap<>();
+            for (String field : review.getRatings().keySet()) {
+                newRatings.put(field, ((current.getRatings().get(field) + review.getRatings().get(field)) / size));
+            }
+
+            // update the hotel info
+            current.setRate(newRate);
+            current.setRatings(newRatings);
+        } finally {
+            // release the lock
+            this.lock.unlock();
+
+            // TODO - temp debug print
+            System.out.println("* DEBUG (hotelManagement.addReview) - \tlock released");
         }
-
-        // check if the hotel exists
-        if (currentId.equals("empty")) {
-            throw new Exception("HOTEL");
-        }
-
-        Hotel current = this.hotels.get(currentId);
-
-        // add the review in the list reviews
-        current.addReview(review);
-
-        // calculate and set new average rate and ratings
-        int size = current.getReviewsNumber();
-
-        // calculate the new rate and ratings
-        double newRate = (current.getRate() + review.getRate()) / size;
-        Map<String, Integer> newRatings = new HashMap<>();
-        for (String field : review.getRatings().keySet()) {
-            newRatings.put(field, ((current.getRatings().get(field) + review.getRatings().get(field)) / size));
-        }
-
-        // update the hotel info
-        current.setRate(newRate);
-        current.setRatings(newRatings);
-
-        // release the lock
-        this.lock.unlock();
 
         // update the rank of the hotel
         return this.updateRanking();
@@ -190,6 +241,9 @@ public class HotelManagement {
     public List<Review> getReviews(String nomeHotel, String nomeCittà) throws Exception {
         // get the lock
         this.lock.lock();
+
+        // TODO - temp debug print
+        System.out.println("* DEBUG (hotelmanagement.getreview) - \tlock acquired");
 
         // check if hotel exists and find it
         String currentId = "empty";
@@ -207,6 +261,9 @@ public class HotelManagement {
             // release the lock
             this.lock.unlock();
 
+            // TODO - temp debug print
+            System.out.println("* DEBUG (hotelManagement.getreview) - \tlock released");
+
             throw new Exception("HOTEL");
         }
 
@@ -215,6 +272,9 @@ public class HotelManagement {
 
         // release the lock
         this.lock.unlock();
+
+        // TODO - temp debug print
+        System.out.println("* DEBUG (hotelManagement.getReview) - \tlock released");
 
         return current.getReviews();
     }
@@ -263,88 +323,120 @@ public class HotelManagement {
         // get the lock
         this.lock.lock();
 
+        // TODO - temp debug print
+        System.out.println("* DEBUG (hotelmanagement.updateranking) - \tlock acquired");
+
         Map<String, Hotel> newBest = new HashMap<String, Hotel>();
 
         // create a map to group hotels by city
         Map<String, List<Hotel>> hotelsByCity = this.groupByCity();
 
-        // calculate weight for recency (for each city) and check if local top hotel
-        // changed
-        for (String currentCity : hotelsByCity.keySet()) {
-            List<Hotel> cityHotels = hotelsByCity.get(currentCity);
-            // max number of review of an hotel in that city (is 1 in case of the list is
-            // empty)
-            int maxReviewCount = cityHotels.stream().mapToInt(h -> h.getReviews().size()).max().orElse(1);
-            double maxRecentWeight = 0.0;
+        try {
+            // calculate weight for recency (for each city) and check if local top hotel
+            // changed
+            for (String currentCity : hotelsByCity.keySet()) {
+                // TODO - temp debug print
+                System.out.println("\t* DEBUG (updateRanking) - \tcurrent city: " + currentCity);
+                List<Hotel> cityHotels = hotelsByCity.get(currentCity);
 
-            // calculate weights for recency
-            for (Hotel hotel : cityHotels) {
-                // for each review of the hotel
-                for (Review review : hotel.getReviews()) {
-                    // calculate the weight of the review
-                    double recentWeight = calculateRecentWeight(hotel);
-                    if (maxRecentWeight < recentWeight) {
-                        // update the max weight
-                        maxRecentWeight = recentWeight;
+                // TODO - temp debug print
+                System.out.println("\t\t* DEBUG - \tget hotels grouped by city for " + currentCity + ", ready to compute max review count");
+                // max number of review of an hotel in that city (is 1 in case of the list is
+                // empty)
+                int j = 0;
+
+                for (Hotel hotel : cityHotels) {
+                    // TODO - temp debug print
+                    System.out.println("* DEBUG - \t" + j + " - nome: " + hotel.getName() + " - recensioni: " + hotel.getReviewsNumber());
+                    j++;
+                    // System.out.println("\t\t*---- DEBUG - \t" + hotel.getName() + " has " + hotel.getReviews().size() + " reviews");
+                }
+
+                int maxReviewCount = cityHotels.stream().mapToInt(h -> h.getReviews().size()).max().orElse(1);
+                double maxRecentWeight = 0.0;
+
+                // TODO - temp debug print
+                System.out.println("\t\t* DEBUG - \tcompute max review count and ready to calculate weights for " + currentCity);
+
+                // calculate weights for recency
+                for (Hotel hotel : cityHotels) {
+                    // for each review of the hotel
+                    for (Review review : hotel.getReviews()) {
+                        // calculate the weight of the review
+                        double recentWeight = calculateRecentWeight(hotel);
+                        if (maxRecentWeight < recentWeight) {
+                            // update the max weight
+                            maxRecentWeight = recentWeight;
+                        }
                     }
                 }
+
+                // TODO - temp debug print
+                System.out.println("\t\t* DEBUG - \tcalculate weights for " + currentCity);
+
+                Map<String, Double> rankValues = new HashMap<String, Double>();
+                // compute rank value for each hotel
+                for (Hotel hotel : cityHotels) {
+                    // get the average rate
+                    double avgRate = hotel.getRate();
+                    // get the number of review
+                    int reviewCount = hotel.getReviewsNumber();
+                    // get the recent weight
+                    double recentWeight = calculateRecentWeight(hotel);
+                    // TODO - levare da qui e scrivere nella doc
+                    // - avgRating è la valutazione media delle recensioni dell'hotel.
+                    // - 5.0 è il massimo punteggio possibile per una recensione (assumendo una
+                    // scala da 1 a 5).
+                    // - reviewsCount è il numero totale di recensioni per l'hotel.
+                    // - maxReviewsCount è il numero massimo di recensioni tra tutti gli hotel della
+                    // stessa città.
+                    // - recentWeight è il peso totale delle recensioni recenti per l'hotel,
+                    // calcolato con il metodo calculateRecentWeight.
+                    // - maxRecentWeight è il massimo peso delle recensioni recenti tra tutti gli
+                    // hotel della stessa città.
+                    //
+                    // Ogni componente della formula è moltiplicata per un peso (0.5 per la qualità,
+                    // 0.3 per la quantità, 0.2 per l'attualità) per dare l'importanza relativa
+                    // desiderata a ciascun fattore nel calcolo del rank finale dell'hotel.
+                    double rankValue = ((avgRate / 0.5) * 0.5) + ((reviewCount / maxReviewCount) / 0.3)
+                            + ((recentWeight / maxRecentWeight) * 0.2);
+                    rankValues.put(hotel.getId(), rankValue);
+                }
+
+                // TODO - temp debug print
+                System.out.println("\t\t* DEBUG - \tcumpute rank for " + currentCity);
+
+                // sort by rank value
+                cityHotels.sort((hotel1, hotel2) -> {
+                    Double rank1 = rankValues.get(hotel1.getId());
+                    Double rank2 = rankValues.get(hotel2.getId());
+                    return rank1.compareTo(rank2);
+                });
+
+                // update the rank of each hotel
+                int i = 1;
+                for (Hotel hotel : cityHotels) {
+                    this.hotels.get(hotel.getId()).setRank(i);
+                    i++;
+                }
+
+                // check if best hotel in local ranking changed
+                if (cityHotels.get(0).getId().equals(this.bestHotels.get(currentCity).getId())) {
+                    // update the best hotel in local ranking
+                    this.bestHotels.remove(currentCity);
+                    this.bestHotels.put(currentCity, cityHotels.get(0));
+
+                    newBest.put(currentCity, cityHotels.get(0));
+                }
             }
+        } finally {
+            // release the lock
+            this.lock.unlock();
 
-            Map<String, Double> rankValues = new HashMap<String, Double>();
-            // compute rank value for each hotel
-            for (Hotel hotel : cityHotels) {
-                // get the average rate
-                double avgRate = hotel.getRate();
-                // get the number of review
-                int reviewCount = hotel.getReviewsNumber();
-                // get the recent weight
-                double recentWeight = calculateRecentWeight(hotel);
-                // TODO - levare da qui e scrivere nella doc
-                // - avgRating è la valutazione media delle recensioni dell'hotel.
-                // - 5.0 è il massimo punteggio possibile per una recensione (assumendo una
-                // scala da 1 a 5).
-                // - reviewsCount è il numero totale di recensioni per l'hotel.
-                // - maxReviewsCount è il numero massimo di recensioni tra tutti gli hotel della
-                // stessa città.
-                // - recentWeight è il peso totale delle recensioni recenti per l'hotel,
-                // calcolato con il metodo calculateRecentWeight.
-                // - maxRecentWeight è il massimo peso delle recensioni recenti tra tutti gli
-                // hotel della stessa città.
-                //
-                // Ogni componente della formula è moltiplicata per un peso (0.5 per la qualità,
-                // 0.3 per la quantità, 0.2 per l'attualità) per dare l'importanza relativa
-                // desiderata a ciascun fattore nel calcolo del rank finale dell'hotel.
-                double rankValue = ((avgRate / 0.5) * 0.5) + ((reviewCount / maxReviewCount) / 0.3)
-                        + ((recentWeight / maxRecentWeight) * 0.2);
-                rankValues.put(hotel.getId(), rankValue);
-            }
-
-            // sort by rank value
-            cityHotels.sort((hotel1, hotel2) -> {
-                Double rank1 = rankValues.get(hotel1.getId());
-                Double rank2 = rankValues.get(hotel2.getId());
-                return rank1.compareTo(rank2);
-            });
-
-            // update the rank of each hotel
-            int i = 1;
-            for (Hotel hotel : cityHotels) {
-                this.hotels.get(hotel.getId()).setRank(i);
-                i++;
-            }
-
-            // check if best hotel in local ranking changed
-            if (cityHotels.get(0).getId().equals(this.bestHotels.get(currentCity).getId())) {
-                // update the best hotel in local ranking
-                this.bestHotels.remove(currentCity);
-                this.bestHotels.put(currentCity, cityHotels.get(0));
-
-                newBest.put(currentCity, cityHotels.get(0));
-            }
         }
 
-        // release the lock
-        this.lock.unlock();
+        // TODO - temp debug print
+        System.out.println("* DEBUG (hotelManagement.updateranking) - \tlock released");
 
         return newBest;
     }
@@ -405,13 +497,21 @@ public class HotelManagement {
      * save the hotels infos in the JSON file
      */
     public void saveHotel() {
+
+        // TODO - temp debug print
+        System.out.println("* DEBUG (hotelManagement.savehotel) - \twait for the lock (" + this.lock.hashCode() + ")");
         // get the lock
         this.lock.lock();
+        // TODO - temp debug print
+        System.out.println("* DEBUG (hotelManagement.savehotel) - \tlock acquired");
 
         List<Hotel> temp = new ArrayList<Hotel>(this.hotels.values());
         dataPersistence.saveHotels(temp, this.hotelPath);
 
         // release the lock
         this.lock.unlock();
+
+        // TODO - temp debug print
+        System.out.println("* DEBUG (hotelManagement.savehotel) - \tlock released");
     }
 }

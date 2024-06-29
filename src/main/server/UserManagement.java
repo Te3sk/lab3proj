@@ -40,9 +40,7 @@ public class UserManagement {
      * @throws USERN_Y if the username already exists
      */
     public synchronized void register(String username, String psw) throws Exception {
-        // get the lock
-        this.lock.lock();
-
+        
         // check if username and psw is empty
         if (username == null || username.isEmpty() || psw == null || psw.isEmpty()) {
             throw new Exception("EMPTYF");
@@ -53,6 +51,9 @@ public class UserManagement {
                 throw new Exception("USERN_Y");
             }
         }
+        
+        // get the lock
+        this.lock.lock();
 
         // save new user datas
         User newUser = new User(username, psw);
@@ -61,11 +62,16 @@ public class UserManagement {
         // TODO - temp debug print
         System.out.println("* DEBUG - \tsave user, now register on json");
 
-        // update json file
-        this.dataPersistence.saveUsers(this.users, this.dataFilePath);
+        // // update json file
+        // this.dataPersistence.saveUsers(this.users, this.dataFilePath);
 
         // release the lock
         this.lock.unlock();
+
+        
+        // TODO - temp debug print
+        System.out.println("* DEBUG (usermanagement.register) - \tlock released");
+
     }
 
     /**
@@ -79,36 +85,42 @@ public class UserManagement {
      * @throws WRONGPSW if the password is incorrect
      */
     public synchronized void login(String username, String psw) throws Exception {
-        // get the lock
-        this.lock.lock();
-
+        
         // check if username or psw are empty
         if (username == null || username.isEmpty() || psw == null || psw.isEmpty()) {
             throw new Exception("EMPTYF");
         }
-
+        
         // check if username exists
         User user = this.users.get(username);
-
+        
         if (user == null) {
             // release the lock
             this.lock.unlock();
-
+            
             throw new Exception("USERN_N");
         }
-
+        
         // check if psw match with the User
         if (!user.getPassword().equals(psw)) {
             // release the lock
             this.lock.unlock();
-
+            
             throw new Exception("Incorrect psw.");
         }
+        
+        // get the lock
+        this.lock.lock();
 
         this.loggedInUsers.add(username);
 
         // release the lock
         this.lock.unlock();
+
+        
+        // TODO - temp debug print
+        System.out.println("* DEBUG (usermanagement.login) - \tlock released");
+
 
         throw new Exception("Login successfull.");
     }
@@ -121,20 +133,28 @@ public class UserManagement {
      * @throws USERN_N if can't find the username
      */
     public void logout(String username) throws Exception {
-        // get the lock
-        this.lock.lock();
-
+        
         if (!loggedInUsers.contains(username)) {
             // release the lock
             this.lock.unlock();
-
+            
             throw new Exception("USERN_N");
         }
+        
+        // get the lock
+        this.lock.lock();
+
+        // TODO - temp debug print
+        System.out.println("* DEBUG (usermanagement.logout) - \tlock acquired");
 
         loggedInUsers.remove(username);
 
         // release the lock
         this.lock.unlock();
+
+        // TODO - temp debug print
+        System.out.println("* DEBUG (usermanagement.logout) - \tlock released");
+
     }
     
     /**
@@ -142,13 +162,23 @@ public class UserManagement {
      * Acquires a lock before saving the users and releases the lock after saving.
      */
     public void saveUsers() {
+
+        // TODO - temp debug print
+        System.out.println("* DEBUG (usermanagement) - \twait for the lock");
+
         // get the lock
         this.lock.lock();
 
-        dataPersistence.saveUsers(users, this.dataFilePath);
-
+        // TODO - temp debug print
+        System.out.println("* DEBUG (usermanagement) - \tlock acquired");
+        
+        this.dataPersistence.saveUsers(users, this.dataFilePath);
+        
         // release the lock
         this.lock.unlock();
+
+        // TODO - temp debug print
+        System.out.println("* DEBUG (usermanagement.saveuser) - \tlock released");
     }
 
     /**
