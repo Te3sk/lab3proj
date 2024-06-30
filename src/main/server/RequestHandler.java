@@ -36,12 +36,12 @@ public class RequestHandler implements Runnable {
 
     private ByteBuffer buffer = ByteBuffer.allocateDirect(1024);
     private Selector selector;
-    private Boolean isRunning = true;
+    // TODO (remove) - private Boolean isRunning = true;
 
     private HOTELIERServer server;
     private UserManagement userManagement;
     private HotelManagement hotelManagement;
-    private DataPersistence dataPersistence;
+    // TODO (remove) - private DataPersistence dataPersistence;
     private Set<String> errors = new HashSet<String>();
 
     /**
@@ -57,53 +57,55 @@ public class RequestHandler implements Runnable {
      */
     @Override
     public void run() {
+        // TODO - remove this, put it in HOTELIERServer
         // creating thread for saving data
-        Thread backupThread = new Thread(this.dataPersistence);
+        // Thread backupThread = new Thread(this.dataPersistence);
 
+        // TODO - remove this, put it in HOTELIERServer
         // initializing that thread
-        backupThread.start();
+        // backupThread.start();
 
-        while (isRunning) {
-            // read message from client, check its validity and dispatch it (handle non
-            // correct messages)
-            try {
-                // convert the message in a simple String
-                String msg = "";
+        // read message from client, check its validity and dispatch it (handle non
+        // correct messages)
+        try {
+            // convert the message in a simple String
+            String msg = "";
 
-                // after a successfully request the server recieves infinite empty messages,
-                // whitout this while cycle it became crazy and crashes
-                while (msg.isEmpty()) {
-                    msg = this.readAsString();
-                }
-
-                // check validity of the message (parameters number)
-                int params = (int) msg.chars().filter(c -> c == '_').count();
-                if (params == 1 && msg.equals("_QUIT")) { // quit message
-                    // check if the message is a quit message
-                    this.quit();
-                } else if (params < 2 || params > 6) { // if the message has the wrong number of parameters
-                    // else check if the message has the right number of parameters
-                    try {
-                        this.write("FORMAT");
-                    } catch (Exception e) {
-                        // ! Error message !
-                        System.out.println(e.getMessage());
-                    }
-                } else { // if the message is VALID, dispatch it
-                    this.dispatcher(msg);
-                }
-            } catch (ClosedChannelException e) {
-                // handle if the channel is closed (and print a msg)
-                this.quit();
-                // * Log message *
-                System.out.println("A client close the connection.");
-            } catch (IOException e) {
-                // set the focus on read operation
-                this.callerAddress.keyFor(this.selector).interestOps(SelectionKey.OP_READ);
-                // ! Error message !
-                System.out.println(e.getMessage());
+            // after a successfully request the server recieves infinite empty messages,
+            // whitout this while cycle it became crazy and crashes
+            while (msg.isEmpty()) {
+                msg = this.readAsString();
             }
+
+            // check validity of the message (parameters number)
+            int params = (int) msg.chars().filter(c -> c == '_').count();
+            if (params == 1 && msg.equals("_QUIT")) { // quit message
+                // check if the message is a quit message
+                this.quit();
+            } else if (params < 2 || params > 6) { // if the message has the wrong number of parameters
+                // else check if the message has the right number of parameters
+                try {
+                    this.write("FORMAT");
+                } catch (Exception e) {
+                    // ! Error message !
+                    System.out.println(e.getMessage());
+                }
+            } else { // if the message is VALID, dispatch it
+                this.dispatcher(msg);
+            }
+        } catch (ClosedChannelException e) {
+            // handle if the channel is closed (and print a msg)
+            this.quit();
+            // * Log message *
+            System.out.println("A client close the connection.");
+        } catch (IOException e) {
+            // set the focus on read operation
+            this.callerAddress.keyFor(this.selector).interestOps(SelectionKey.OP_READ);
+            // ! Error message !
+            System.out.println(e.getMessage());
         }
+
+        this.quit();
     }
 
     /**
@@ -188,7 +190,7 @@ public class RequestHandler implements Runnable {
      * Close the connection
      */
     private void quit() {
-        this.isRunning = false;
+        // TODO (remove) - this.isRunning = false;
         try {
             this.server.removeHandler(this);
             this.callerAddress.keyFor(this.selector).cancel();
@@ -211,7 +213,7 @@ public class RequestHandler implements Runnable {
 
         this.server = server;
 
-        this.dataPersistence = new DataPersistence(interval, saverLock, this.hotelManagement, this.userManagement);
+        // TODO (remove) - this.dataPersistence = new DataPersistence(interval, saverLock, this.hotelManagement, this.userManagement);
         // Thread backupThread = new Thread();
 
         // set error messages
@@ -404,15 +406,14 @@ public class RequestHandler implements Runnable {
         this.review = review;
         try {
             // TODO - temp debug print
-            System.out.println("* DEBUG - \tupdating user " + username + "(current points = " + this.userManagement.getUser(username).getBadge());
+            System.out.println("* DEBUG - \tupdating user " + username + "(current points = "
+                    + this.userManagement.getUser(username).getBadge());
 
             // increment user experience
             this.userManagement.getUser(username).updatePoints();
 
-
             Map<String, Hotel> newBest = hotelManagement.addReview(this.getHotelName(), this.getCityName(),
                     this.getReview());
-
 
             this.write("Review added correctly.");
 

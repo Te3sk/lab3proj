@@ -33,7 +33,7 @@ public class HOTELIERServer implements Runnable {
     private List<RequestHandler> requestHandlers;
     private DataPersistence dataPersistence;
     private Lock lock = new ReentrantLock();
-    // ? ThreadPoolExecutor executor;
+    ThreadPoolExecutor executor;
 
     /**
      * HOTELIERServer constructor: to start the server properly, the start method
@@ -65,8 +65,7 @@ public class HOTELIERServer implements Runnable {
             this.serverSocketChannel.register(this.selector, SelectionKey.OP_ACCEPT);
             this.isRunning = true;
             this.requestHandlers = new ArrayList<>();
-
-            // ? this.executor = new ThreadPoolExecutor(1, 100, 300, TimeUnit.SECONDS, new LinkedBlockingDeque<>());
+            this.executor = new ThreadPoolExecutor(1, 100, 300, TimeUnit.SECONDS, new LinkedBlockingDeque<>());
         } catch (Exception e) {
             // ! error message !
             System.out.println("Error during server construction: " + e.getMessage());
@@ -107,17 +106,19 @@ public class HOTELIERServer implements Runnable {
         // * Log message *
         System.out.println("Server is running...");
 
+        // TODO - remove, already initialized in the constructor
         // Create a ThreadPoolExecutor with a core of pool (size 1, max size 100)
         // and keep-alive time of 300 sec for idle threads
-        ThreadPoolExecutor executor = new ThreadPoolExecutor(1, 100, 300, TimeUnit.SECONDS,
-                new LinkedBlockingDeque<>());
+        // // ThreadPoolExecutor executor = new ThreadPoolExecutor(1, 100, 300, TimeUnit.SECONDS,
+        // //         new LinkedBlockingDeque<>());
 
         // Loop while the server is running
         while (isRunning) {
-            try { //  handles non-blocking I/O operations, accepting new connections and reading data from ready channels
-                // perform a non blocking selection operation to check for ready channels
+            try { // handles non-blocking I/O operations, accepting new connections and reading
+                  // data from ready channels
+                  // perform a non blocking selection operation to check for ready channels
                 int readyChannels = selector.selectNow();
-                
+
                 // if no channels ready, skip this ite
                 if (readyChannels == 0) {
                     continue;
@@ -129,7 +130,7 @@ public class HOTELIERServer implements Runnable {
 
                 while (keyIterator.hasNext()) { // iterate over selection keys
                     SelectionKey key = keyIterator.next();
-                    
+
                     if (key.isAcceptable()) { // if the key's channel is ready to accept a new connection
                         // accept the connection
                         SocketChannel connection = this.serverSocketChannel.accept();
@@ -142,9 +143,10 @@ public class HOTELIERServer implements Runnable {
                         // add new request handler to the list
                         synchronized (this.requestHandlers) {
                             this.requestHandlers.add(new RequestHandler(this.userManagement, this.hotelManagement,
-                                    connection, this.selector, this.udpAddr, this.udpPort, this.timeInterval,this.lock, this));
+                                    connection, this.selector, this.udpAddr, this.udpPort, this.timeInterval, this.lock,
+                                    this));
                         }
-                    
+
                         // TODO - temp debug print
                         System.out.println("* DEBUG - \tnew connection from " + connection.getRemoteAddress());
                     } else if (key.isReadable()) { // else if the key's channel is ready to read data
@@ -153,15 +155,15 @@ public class HOTELIERServer implements Runnable {
                         // cancel the key's interest in read operations
                         connection.keyFor(this.selector).interestOps(0);
                         RequestHandler handler;
-                        synchronized(this.requestHandlers){
+                        synchronized (this.requestHandlers) {
                             handler = this.fetchHandler(connection);
                         }
 
                         if (handler != null) {
-                            // submit the request handler to the executor
-                            executor.submit(handler);
-                            // ? submit the request to the threadpool
-                            // ? executor.submit(new Worker(handler));
+                            // // // submit the request handler to the executor
+                            // // executor.submit(handler);
+                            // submit the request to the threadpool
+                            executor.submit(new Worker(handler));
                         } else {
                             // Nessun handler trovato, chiudi la connessione
                             connection.close();
@@ -176,7 +178,7 @@ public class HOTELIERServer implements Runnable {
                                 while (tempIterator.hasNext()) {
                                     RequestHandler h = tempIterator.next();
                                     try {
-                                        if(h.getCallerAddres().equals(connection)){
+                                        if (h.getCallerAddres().equals(connection)) {
                                             tempIterator.remove();
                                         }
                                     } catch (Exception e) {
@@ -186,7 +188,7 @@ public class HOTELIERServer implements Runnable {
                                 }
                             }
                         }
-                    } 
+                    }
 
                     // remove the key from the iterator
                     keyIterator.remove();
@@ -204,20 +206,35 @@ public class HOTELIERServer implements Runnable {
         }
         executor.close();
         executor.shutdown();
+
+        try {
+            if (!executor.awaitTermination(60, TimeUnit.SECONDS)) {
+                executor.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            executor.shutdownNow();
+        } finally {
+            try {
+                serverSocketChannel.close();
+                selector.close();
+            } catch (IOException e) {
+                System.out.println("Error closing server: " + e.getMessage());
+            }
+        }
     }
 
-    // ? private class Worker implements Runnable {
-    // ?     private RequestHandler handler;
+    private class Worker implements Runnable {
+        private RequestHandler handler;
 
-    // ?     public Worker(RequestHandler handler) {
-    // ?         this.handler = handler;
-    // ?     }
+        public Worker(RequestHandler handler) {
+            this.handler = handler;
+        }
 
-    // ?     @Override
-    // ?     public void run() {
-    // ?         this.handler.run();
-    // ?     }
-    // ? }
+        @Override
+        public void run() {
+            this.handler.run();
+        }
+    }
 
     // TODO - handling server.close
 }
