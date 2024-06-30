@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.MulticastSocket;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
@@ -100,7 +101,6 @@ public class RequestHandler implements Runnable {
             System.out.println(e.getMessage());
         }
 
-        this.quit();
     }
 
     /**
@@ -186,11 +186,12 @@ public class RequestHandler implements Runnable {
      */
     private void quit() {
         // TODO (remove) - this.isRunning = false;
+        // TODO - questo va messo solo quando gli arriva il quit (=> gestire bene la chiusura del client)
         try {
-            // this.callerAddress.keyFor(this.selector).cancel();
-            // this.callerAddress.close();
-            // this.server.removeHandler(this);
-            
+            this.callerAddress.keyFor(this.selector).cancel();
+            this.callerAddress.close();
+            this.server.removeHandler(this);
+
         } catch (Exception e) { 
             // ! Error message !
             System.out.println("Error when closing the conncetion: " + e.getMessage());
@@ -472,7 +473,7 @@ public class RequestHandler implements Runnable {
         DatagramSocket udpSock = null;
 
         try {
-            udpSock = new DatagramSocket();
+            udpSock = new MulticastSocket();
 
             byte[] sendData = msg.getBytes();
             DatagramPacket packet = new DatagramPacket(sendData, sendData.length, this.udpAddr, this.udpPort);
@@ -485,6 +486,7 @@ public class RequestHandler implements Runnable {
             // ! Error message !
             System.out.println("Error during notification sending: " + e.getMessage());
         } finally {
+            // TODO
             if (udpSock != null) {
                 udpSock.close();
             }

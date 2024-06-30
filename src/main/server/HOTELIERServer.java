@@ -2,6 +2,8 @@ package main.server;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.MulticastSocket;
+import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
@@ -10,14 +12,21 @@ import java.nio.channels.Selector;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 // import java.util.Scanner;
 import java.util.Set;
+import java.util.concurrent.Executors;
 // import java.util.Timer;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.Executors;
+
+
+import main.dataModels.Hotel;
 
 public class HOTELIERServer implements Runnable {
     private long timeInterval;
@@ -33,7 +42,10 @@ public class HOTELIERServer implements Runnable {
     private List<RequestHandler> requestHandlers;
     private DataPersistence dataPersistence;
     private Lock lock = new ReentrantLock();
-    ThreadPoolExecutor executor;
+    private ThreadPoolExecutor executor;
+    private ScheduledExecutorService scheduler;
+    private NotificationService notificationService;
+    private MulticastSocket multicastSocket;
 
     /**
      * HOTELIERServer constructor: to start the server properly, the start method
@@ -69,6 +81,15 @@ public class HOTELIERServer implements Runnable {
             this.dataPersistence = new DataPersistence(interval, this.lock, this.hotelManagement, this.userManagement);
             Thread backupThread = new Thread(this.dataPersistence);
             backupThread.start();
+
+            // TODO - temp debug print
+            System.out.println("* DEBUG - \tintervallo : " + this.timeInterval);
+
+            this.multicastSocket = new MulticastSocket(broadcastPort);
+            this.notificationService = new NotificationService(this.multicastSocket, this.udpPort, this.udpAddr, this.hotelManagement);
+
+            ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+            scheduler.scheduleAtFixedRate(this.notificationService, this.timeInterval, this.timeInterval, TimeUnit.MILLISECONDS);
         } catch (Exception e) {
             // ! error message !
             System.out.println("Error during server construction: " + e.getMessage());
@@ -127,13 +148,6 @@ public class HOTELIERServer implements Runnable {
         // * Log message *
         System.out.println("Server is running...");
 
-        // TODO - remove, already initialized in the constructor
-        // Create a ThreadPoolExecutor with a core of pool (size 1, max size 100)
-        // and keep-alive time of 300 sec for idle threads
-        // // ThreadPoolExecutor executor = new ThreadPoolExecutor(1, 100, 300,
-        // TimeUnit.SECONDS,
-        // // new LinkedBlockingDeque<>());
-
         // Loop while the server is running
         while (isRunning) {
             try { // handles non-blocking I/O operations, accepting new connections and reading
@@ -154,7 +168,7 @@ public class HOTELIERServer implements Runnable {
                     SelectionKey key = keyIterator.next();
 
                     keyIterator.remove();
-                    
+
                     if (key.isAcceptable()) { // if the key's channel is ready to accept a new connection
                         // accept the connection
                         SocketChannel connection = this.serverSocketChannel.accept();
@@ -258,5 +272,49 @@ public class HOTELIERServer implements Runnable {
         }
     }
 
+    private class NotificationService implements Runnable {
+        private MulticastSocket udpSock;
+        private InetAddress multicastAddr;
+        private int multicastPort;
+        private HotelManagement hotelManagement;
+
+        public NotificationService(MulticastSocket udpSock, int multicastPort, InetAddress multicastAddr, HotelManagement hotelManagement) {
+            this.udpSock = udpSock;
+            this.multicastPort = multicastPort;
+            this.multicastAddr = multicastAddr;
+            this.hotelManagement = hotelManagement;
+        }
+
+        @Override
+        public void run() {
+            // TODO - temp debug print
+            System.out.println("* DEBUG - \tSTART NOTIFICATION SERVICE ");
+
+            Map<String, Hotel> newBest = this.hotelManagement.updateRanking();
+
+            // TODO - temp debug print
+            System.out.println("* DEBUG - \tRANK UPDATED");
+
+            if (newBest != null) {
+                // TODO - temp debug print
+                System.out.println("* DEBUG - \tMANDA MESSAGGIO NEW LOCAL BEST");
+                String msg = "New local best hotels:\n";
+                for (Hotel hotel : newBest.values()) {
+                    msg += hotel.toString() + "\n";
+                }
+
+                try{
+                    byte[] buffer = msg.getBytes();
+                    DatagramPacket packet = new DatagramPacket(buffer, buffer.length, this.multicastAddr, this.multicastPort);
+                    this.udpSock.send(packet);
+                } catch (IOException e) {
+                    System.out.println("Error sending notification: " + e.getMessage());
+                }
+            }
+
+            // TODO - temp debug print
+            System.out.println("* DEBUG - \tFINE NOTIFICATION SERVICE");
+        }
+    }
     // TODO - handling server.close
 }

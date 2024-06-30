@@ -3,6 +3,9 @@ package main.server;
 // import java.io.File;
 // import java.lang.runtime.TemplateRuntime;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +40,7 @@ public class HotelManagement {
         this.hotelPath = hotelPath;
         this.dataPersistence = new DataPersistence();
         this.hotels = dataPersistence.loadHotels(hotelPath);
+        this.bestHotels = new HashMap<String, Hotel>();
 
         this.lock = new ReentrantLock();
     }
@@ -268,6 +272,34 @@ public class HotelManagement {
      * delle recensioni recenti per un hotel nella stessa città.
      */
 
+    public List<Hotel> cityHotelsXranking(String city) {
+        // get the lock
+        this.lock.lock();
+
+        // create a map to group hotels by city
+        Map<String, List<Hotel>> hotelsByCity = this.groupByCity();
+
+        List<Hotel> cityHotels = hotelsByCity.get(city);
+
+        Comparator<Hotel> hotelComparator = new Comparator<Hotel>() {
+            @Override
+            public int compare(Hotel hotel1, Hotel hotel2) {
+                Double score1 = calculateHotelScore(hotel1);
+                Double score2 = calculateHotelScore(hotel2);
+
+                return score1.compareTo(score2);
+            }
+        };
+
+        // sorted hotels by score
+        Collections.sort(cityHotels, hotelComparator);
+
+        // release the lock
+        this.lock.unlock();
+
+        return cityHotels;
+    }
+
     /**
      * Updates the ranking of hotels based on their reviews and ratings.
      * 
@@ -276,6 +308,9 @@ public class HotelManagement {
      */
     @SuppressWarnings("unused")
     public Map<String, Hotel> updateRanking() {
+
+        // TODO - temp debug print
+        System.out.println("* DEBUG - \tSTART UPDATE RANKING");
         // get the lock
         this.lock.lock();
 
@@ -285,66 +320,13 @@ public class HotelManagement {
         Map<String, List<Hotel>> hotelsByCity = this.groupByCity();
 
         try {
+            // TODO - temp debug print
+            System.out.println("* \tDEBUG - \tSTART TRY BRANCH");
             // calculate weight for recency (for each city) and check if local top hotel
             // changed
             for (String currentCity : hotelsByCity.keySet()) {
-                List<Hotel> cityHotels = hotelsByCity.get(currentCity);
 
-                // max number of review of an hotel in that city (is 1 in case of the list is
-                // empty)
-                int j = 0;
-
-                int maxReviewCount = cityHotels.stream().mapToInt(h -> h.getReviews().size()).max().orElse(1);
-                double maxRecentWeight = 0.0;
-
-                // calculate weights for recency
-                for (Hotel hotel : cityHotels) {
-                    // for each review of the hotel
-                    for (Review review : hotel.getReviews()) {
-                        // calculate the weight of the review
-                        double recentWeight = calculateRecentWeight(hotel);
-                        if (maxRecentWeight < recentWeight) {
-                            // update the max weight
-                            maxRecentWeight = recentWeight;
-                        }
-                    }
-                }
-
-                Map<String, Double> rankValues = new HashMap<String, Double>();
-                // compute rank value for each hotel
-                for (Hotel hotel : cityHotels) {
-                    // get the average rate
-                    double avgRate = hotel.getRate();
-                    // get the number of review
-                    int reviewCount = hotel.getReviewsNumber();
-                    // get the recent weight
-                    double recentWeight = calculateRecentWeight(hotel);
-                    // TODO - levare da qui e scrivere nella doc
-                    // - avgRating è la valutazione media delle recensioni dell'hotel.
-                    // - 5.0 è il massimo punteggio possibile per una recensione (assumendo una
-                    // scala da 1 a 5).
-                    // - reviewsCount è il numero totale di recensioni per l'hotel.
-                    // - maxReviewsCount è il numero massimo di recensioni tra tutti gli hotel della
-                    // stessa città.
-                    // - recentWeight è il peso totale delle recensioni recenti per l'hotel,
-                    // calcolato con il metodo calculateRecentWeight.
-                    // - maxRecentWeight è il massimo peso delle recensioni recenti tra tutti gli
-                    // hotel della stessa città.
-                    //
-                    // Ogni componente della formula è moltiplicata per un peso (0.5 per la qualità,
-                    // 0.3 per la quantità, 0.2 per l'attualità) per dare l'importanza relativa
-                    // desiderata a ciascun fattore nel calcolo del rank finale dell'hotel.
-                    double rankValue = ((avgRate / 0.5) * 0.5) + ((reviewCount / maxReviewCount) / 0.3)
-                            + ((recentWeight / maxRecentWeight) * 0.2);
-                    rankValues.put(hotel.getId(), rankValue);
-                }
-
-                // sort by rank value
-                cityHotels.sort((hotel1, hotel2) -> {
-                    Double rank1 = rankValues.get(hotel1.getId());
-                    Double rank2 = rankValues.get(hotel2.getId());
-                    return rank1.compareTo(rank2);
-                });
+                List<Hotel> cityHotels = cityHotelsXranking(currentCity);
 
                 // update the rank of each hotel
                 int i = 1;
@@ -354,21 +336,187 @@ public class HotelManagement {
                 }
 
                 // check if best hotel in local ranking changed
-                if (cityHotels.get(0).getId().equals(this.bestHotels.get(currentCity).getId())) {
-                    // update the best hotel in local ranking
-                    this.bestHotels.remove(currentCity);
+                String id1 = cityHotels.get(0).getId();
+                if (this.bestHotels == null || this.bestHotels.get(currentCity) == null) {
                     this.bestHotels.put(currentCity, cityHotels.get(0));
-
                     newBest.put(currentCity, cityHotels.get(0));
+                } else {
+                    if (cityHotels.get(0).getId().equals(this.bestHotels.get(currentCity).getId())) {
+                        // update the best hotel in local ranking
+                        this.bestHotels.remove(currentCity);
+                        this.bestHotels.put(currentCity, cityHotels.get(0));
+                        newBest.put(currentCity, cityHotels.get(0));
+                    }
                 }
+
+                // // TODO - temp debug print
+                // System.out.println("* \t\tDEBUG - \t city rank: " + currentCity);
+                // List<Hotel> cityHotels = hotelsByCity.get(currentCity);
+                // // max number of review of an hotel in that city (is 1 in case of the list is
+                // // empty)
+                // int j = 0;
+                // if (cityHotels == null) {
+                // // TODO - temp debug print
+                // System.out.println("* DEBUG - \tdiocane");
+                // }
+                // if (cityHotels.isEmpty()) {
+                // // TODO - temp debug print
+                // System.out.println("* DEBUG - \tdiocane2");
+                // }
+                // // int maxReviewCount = cityHotels.stream().mapToInt(h ->
+                // // h.getReviews().size()).max().orElse(1);
+                // int maxReviewCount = 1;
+                // for (Hotel hotel : cityHotels) {
+                // if (hotel.getReviewsNumber() > maxReviewCount) {
+                // maxReviewCount = hotel.getReviewsNumber();
+                // }
+                // }
+                // // TODO - temp debug print
+                // System.out.println("* \t\tDEBUG - \tmaxreview count: " + maxReviewCount);
+                // double maxRecentWeight = 1.0;
+                // // calculate weights for recency
+                // for (Hotel hotel : cityHotels) {
+                // // for each review of the hotel
+                // if (hotel.getReviewsNumber() > 0) {
+                // for (Review review : hotel.getReviews()) {
+                // // calculate the weight of the review
+                // double recentWeight = calculateRecentWeight(hotel);
+                // if (maxRecentWeight < recentWeight) {
+                // // update the max weight
+                // maxRecentWeight = recentWeight;
+                // }
+                // }
+                // }
+                // }
+                // // TODO - temp debug print
+                // System.out.println("* DEBUG - \tmaxRecentWeight: " + maxRecentWeight);
+                // Map<String, Double> rankValues = new HashMap<String, Double>();
+                // // compute rank value for each hotel
+                // for (Hotel hotel : cityHotels) {
+                // // TODO - temp debug print
+                // System.out.println("* \t\tDEBUG - \tdiocane4 - " + hotel.getName());
+                // // get the average rate
+                // double avgRate = hotel.getRate();
+                // // TODO - temp debug print
+                // System.out.println("* \t\tDEBUG - \tdiocane5");
+                // // get the number of review
+                // int reviewCount = hotel.getReviewsNumber();
+                // // TODO - temp debug print
+                // System.out.println("* \t\tDEBUG - \tdiocane6");
+                // // get the recent weight
+                // double recentWeight = calculateRecentWeight(hotel);
+                // // TODO - temp debug print
+                // System.out.println("* \t\tDEBUG - \tdiocane 7");
+                // // TODO - levare da qui e scrivere nella doc
+                // // - avgRating è la valutazione media delle recensioni dell'hotel.
+                // // - 5.0 è il massimo punteggio possibile per una recensione (assumendo una
+                // // scala da 1 a 5).
+                // // - reviewsCount è il numero totale di recensioni per l'hotel.
+                // // - maxReviewsCount è il numero massimo di recensioni tra tutti gli hotel
+                // della
+                // // stessa città.
+                // // - recentWeight è il peso totale delle recensioni recenti per l'hotel,
+                // // calcolato con il metodo calculateRecentWeight.
+                // // - maxRecentWeight è il massimo peso delle recensioni recenti tra tutti gli
+                // // hotel della stessa città.
+                // //
+                // // Ogni componente della formula è moltiplicata per un peso (0.5 per la
+                // qualità,
+                // // 0.3 per la quantità, 0.2 per l'attualità) per dare l'importanza relativa
+                // // desiderata a ciascun fattore nel calcolo del rank finale dell'hotel.
+                // double rankValue = ((avgRate / 0.5) * 0.5) + ((reviewCount / maxReviewCount)
+                // / 0.3)
+                // + ((recentWeight / maxRecentWeight) * 0.2);
+                // rankValues.put(hotel.getId(), rankValue);
+                // // TODO - temp debug print
+                // System.out.println("* \t\tDEBUG - \tdiocane8");
+                // }
+                // // TODO - temp debug print
+                // System.out.println("* DEBUG - \tcomputed rank values");
+                // // sort by rank value
+                // Comparator<Hotel> rankComparator = new Comparator<Hotel>() {
+                // @Override
+                // public int compare(Hotel hotel1, Hotel hotel2) {
+                // return Integer.compare(hotel1.getRank(), hotel2.getRank());
+                // }
+                // };
+                // Collections.sort(cityHotels, rankComparator);
+                // // TODO - temp debug print
+                // System.out.println("* DEBUG - \tsorted hotels by rank value");
+                // // update the rank of each hotel
+                // int i = 1;
+                // for (Hotel hotel : cityHotels) {
+                // this.hotels.get(hotel.getId()).setRank(i);
+                // i++;
+                // }
+                // // TODO - temp debug print
+                // System.out.println("* DEBUG - \tupdated hotel rank");
+                // // check if best hotel in local ranking changed
+                // String id1 = cityHotels.get(0).getId();
+                // // TODO - temp debug print
+                // System.out.println("* \tDEBUG - \tid 1 = " + id1);
+                // if (this.bestHotels == null || this.bestHotels.get(currentCity) == null){
+                // // TODO - temp debug print
+                // System.out.println("* DEBUG - \tdiocane 11");
+                // this.bestHotels.put(currentCity, cityHotels.get(0));
+                // newBest.put(currentCity, cityHotels.get(0));
+                // } else {
+                // if
+                // (cityHotels.get(0).getId().equals(this.bestHotels.get(currentCity).getId()))
+                // {
+                // // TODO - temp debug print
+                // System.out.println("* DEBUG - \tdiocane 9 S");
+                // // update the best hotel in local ranking
+                // this.bestHotels.remove(currentCity);
+                // this.bestHotels.put(currentCity, cityHotels.get(0));
+                // newBest.put(currentCity, cityHotels.get(0));
+                // }
+                // }
+                // // TODO - temp debug print
+                // System.out.println("* DEBUG - \tEND CITY RANKING");
             }
         } finally {
             // release the lock
             this.lock.unlock();
 
         }
-
+        
+        // TODO - temp debug print
+        System.out.println("* DEBUG - \tEND UPDATE RANKING");
+        
         return newBest;
+    }
+
+    public double calculateHotelScore(Hotel hotel) {
+        Double score = 0.0;
+        Double recencyScore = 0.0;
+
+        // calculate quality score
+        Double globalScore = 0.0;
+        Integer ratingsScore = 0;
+        if (!(hotel.getReviews() == null) || !(hotel.getReviews().isEmpty())) {
+            for (Review review : hotel.getReviews()) {
+                globalScore += review.getRate();
+
+                for (Integer rating : review.getRatings().values()) {
+                    ratingsScore += rating;
+                }
+                ratingsScore = ratingsScore / 4;
+            }
+
+            score = (globalScore + ratingsScore.doubleValue()) / hotel.getReviewsNumber();
+            // calculate recency score
+            Review lastReview = hotel.getReviews().get(hotel.getReviewsNumber() - 1);
+            long daySinceLastReview = (System.currentTimeMillis() - lastReview.getDate().getTime())
+                    / (1000 * 60 * 60 * 24);
+            // exponent decreasing with time
+            recencyScore = Math.exp(-daySinceLastReview / 30.0);
+
+            // total score = combinazione lineare dei tre fattori
+            score = globalScore * 0.5 + ratingsScore * 0.3 + recencyScore * 0.2;
+        }
+
+        return score;
     }
 
     /**
@@ -411,6 +559,9 @@ public class HotelManagement {
     private double calculateRecentWeight(Hotel hotel) {
         double weight = 0.0;
         long currentTime = System.currentTimeMillis();
+        if (hotel.getReviews() == null) {
+            return weight;
+        }
         for (Review review : hotel.getReviews()) {
             long reviewTime = review.getDate().getTime();
             long timeDifference = currentTime - reviewTime;

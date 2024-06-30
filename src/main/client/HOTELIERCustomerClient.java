@@ -354,6 +354,11 @@ public class HOTELIERCustomerClient {
         socketChannel.keyFor(selector).interestOps(0);
     }
 
+
+
+
+
+    
     /**
      * The `NotificationReciever` class is responsible for handling incoming
      * notifications in a separate thread.
@@ -367,6 +372,7 @@ public class HOTELIERCustomerClient {
         private int udpPort;
         private boolean isRunning = true;
         private Lock lock;
+        private MulticastSocket notificator;
 
         /**
          * Constructs a new NotificationReciever object with the specified UDP address
@@ -389,18 +395,19 @@ public class HOTELIERCustomerClient {
          * If an error occurs during the notification receiving process, an error
          * message is printed.
          */
+        @SuppressWarnings("deprecation")
         @Override
         public void run() {
-            DatagramSocket udpSock = null;
 
             try {
-                udpSock = new DatagramSocket(this.udpPort, this.udpAddr);
+                this.notificator = new MulticastSocket(udpPort);
+                this.notificator.joinGroup(udpAddr);
 
                 while (isRunning) {
                     byte[] receiveData = new byte[1024];
                     DatagramPacket packet = new DatagramPacket(receiveData, receiveData.length);
 
-                    udpSock.receive(packet);
+                    this.notificator.receive(packet);
 
                     String msg = new String(packet.getData(), 0, packet.getLength());
 
@@ -419,10 +426,7 @@ public class HOTELIERCustomerClient {
             } catch (Exception e) {
                 // ! Error message !
                 System.out.println("Error during notification receiving: " + e.getMessage());
-            } finally {
-                if (udpSock != null) {
-                    udpSock.close();
-                }
+                // ! Cannot assign requested address: bind
             }
         }
 
@@ -431,6 +435,10 @@ public class HOTELIERCustomerClient {
          */
         public void stop() {
             this.isRunning = false;
+            if (notificator != null) {
+                notificator.close();
+            
+            }
         }
     }
 
@@ -731,7 +739,7 @@ public class HOTELIERCustomerClient {
             }
 
             // close the multicast socket if is open
-            this.stopNotification();
+            this.notificationReciever.stop();
 
             this.isConnect = false;
             // * Log message *
