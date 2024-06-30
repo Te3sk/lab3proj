@@ -24,9 +24,6 @@ public class DataPersistence implements Runnable {
      * constructor for a DataPersistent obj (empty)
      */
     public DataPersistence(long interval, Lock lock, HotelManagement hotelManagement, UserManagement userManagement) {
-        // TODO - temp debug print
-        System.out.println("* DEBUG - \tcreting datapersistence for saving data periodically");
-        
         this.interval = interval;
         this.lock = lock;
         this.hotelManagement = hotelManagement;
@@ -38,33 +35,18 @@ public class DataPersistence implements Runnable {
 
     @Override
     public void run() {
-        // TODO - implement run
-        // TODO - temp debug print
-        System.out.println("* DEBUG - \trun method for saving started");
         try {
             while (true) {
-                // TODO - temp debug print
-                System.out.println("* DEBUG - \tbefore sleep (interval = " + this.interval + ")");
                 Thread.sleep(this.interval);
-                // TODO - temp debug print
-                System.out.println("* DEBUG - \tafter sleep, wait for the lock (" + this.lock.hashCode() + ")");
 
                 // acquire the lock
                 this.lock.lock();
-
-                // TODO - temp debug print
-                System.out.println("* DEBUG - \tlock acquired");
 
                 this.hotelManagement.saveHotel();
                 this.userManagement.saveUsers();
 
                 // release the lock
                 this.lock.unlock();
-                // TODO - temp debug print
-                System.out.println("* DEBUG - \tlock released");
-
-                // TODO - temp debug print
-                System.out.println("* DEBUG - \tsaved data successfully");
             }
         } catch (InterruptedException e) {
             // ! Error message !
@@ -84,24 +66,11 @@ public class DataPersistence implements Runnable {
      */
     public void saveUsers(Map<String, User> users, String filePath) {
         try {
-            if(users == null) {
-                // TODO - temp debug print
-                System.out.println("* DEBUG - \tusers null");
-                return;
-            }
             // convert the map in a list
             List<User> temp = new ArrayList<>(users.values());
 
-            if (temp == null) {
-                // TODO - temp debug print
-                System.out.println("* DEBUG - \ttemp user null");
-                return;
-            }
             // save the list in the file
             JsonUtil.serializeListToFile(temp, filePath);
-
-            // TODO - temp debug print
-            System.out.println("* DEBUG - \tdone");
         } catch (Exception e) {
             System.out.println("Error during users save: " + e);
         }
@@ -115,11 +84,6 @@ public class DataPersistence implements Runnable {
      */
     public void saveHotels(List<Hotel> hotels, String filePath) {
         try {
-            if (hotels == null) {
-                // TODO - temp debug print
-                System.out.println("* DEBUG - \thotels null");
-                return;
-            }
             JsonUtil.serializeListToFile(hotels, filePath);
         } catch (Exception e) {
             System.out.println("Error during hotels saving: " + e);

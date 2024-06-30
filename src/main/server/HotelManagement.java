@@ -52,8 +52,6 @@ public class HotelManagement {
      * @throws HOTEL  if can't find the hotel
      */
     public Hotel searchHotel(String hotelName, String city) throws Exception {
-        // TODO - temp debug print
-        System.out.println("* DEBUG (hotelmanagement.searchhotel) - \tlock acquired");
 
         // get the lock
         this.lock.lock();
@@ -64,9 +62,6 @@ public class HotelManagement {
             // release the lock
             this.lock.unlock();
 
-            // TODO - temp debug print
-            System.out.println("* DEBUG (hotelManagement.searchhotel) - \tlock released");
-
             throw new Exception("EMPTYF");
         }
 
@@ -74,9 +69,6 @@ public class HotelManagement {
         if (city == null || city.isEmpty() || !Capitals.isValidCapital(city)) {
             // release the lock
             this.lock.unlock();
-
-            // TODO - temp debug print
-            System.out.println("* DEBUG (hotelManagement.searchhotel) - \tlock released");
 
             throw new Exception("CITY");
         }
@@ -87,18 +79,12 @@ public class HotelManagement {
                 // release the lock
                 this.lock.unlock();
 
-                // TODO - temp debug print
-                System.out.println("* DEBUG (hotelManagement.searchhotel) - \tlock released");
-
                 return hotel;
             }
         }
 
         // release the lock
         this.lock.unlock();
-
-        // TODO - temp debug print
-        System.out.println("* DEBUG (hotelManagement.searchhotel) - \tlock released");
 
         // if can't find the hotel throws exception
         throw new Exception("HOTEL");
@@ -115,16 +101,10 @@ public class HotelManagement {
         // get the lock
         this.lock.lock();
 
-        // TODO - temp debug print
-        System.out.println("* DEBUG (hotelmanagement.searchhotelbycity) - \tlock acquired");
-
         // check city validity if the city is one of the rightones
         if (city == null || city.isEmpty() || !Capitals.isValidCapital(city)) {
             // release the lock
             this.lock.unlock();
-
-            // TODO - temp debug print
-            System.out.println("* DEBUG (hotelManagement.searchhotelbycity) - \tlock released");
 
             throw new Exception("CITY");
         }
@@ -142,17 +122,11 @@ public class HotelManagement {
             // release the lock
             this.lock.unlock();
 
-            // TODO - temp debug print
-            System.out.println("* DEBUG (hotelManagement.searchhotelbycity) - \tlock released");
-
             return null;
         }
 
         // release the lock
         this.lock.unlock();
-
-        // TODO - temp debug print
-        System.out.println("* DEBUG (hotelManagement.searchHotelbycity) - \tlock released");
 
         return hotelInCity;
     }
@@ -176,9 +150,6 @@ public class HotelManagement {
         this.lock.lock();
 
         try {
-            // TODO - temp debug print
-            System.out.println("* DEBUG (hotelmanagement.addReview) - \tlock acquired");
-
             // check if hotel exists and find it
             String currentId = "empty";
 
@@ -194,9 +165,6 @@ public class HotelManagement {
             if (currentId.equals("empty")) {
                 // release the lock
                 this.lock.unlock();
-
-                // TODO - temp debug print
-                System.out.println("* DEBUG (hotelManagement.searchhotelbycity) - \tlock released");
 
                 throw new Exception("HOTEL");
             }
@@ -222,9 +190,6 @@ public class HotelManagement {
         } finally {
             // release the lock
             this.lock.unlock();
-
-            // TODO - temp debug print
-            System.out.println("* DEBUG (hotelManagement.addReview) - \tlock released");
         }
 
         // update the rank of the hotel
@@ -242,9 +207,6 @@ public class HotelManagement {
         // get the lock
         this.lock.lock();
 
-        // TODO - temp debug print
-        System.out.println("* DEBUG (hotelmanagement.getreview) - \tlock acquired");
-
         // check if hotel exists and find it
         String currentId = "empty";
 
@@ -261,9 +223,6 @@ public class HotelManagement {
             // release the lock
             this.lock.unlock();
 
-            // TODO - temp debug print
-            System.out.println("* DEBUG (hotelManagement.getreview) - \tlock released");
-
             throw new Exception("HOTEL");
         }
 
@@ -272,9 +231,6 @@ public class HotelManagement {
 
         // release the lock
         this.lock.unlock();
-
-        // TODO - temp debug print
-        System.out.println("* DEBUG (hotelManagement.getReview) - \tlock released");
 
         return current.getReviews();
     }
@@ -323,9 +279,6 @@ public class HotelManagement {
         // get the lock
         this.lock.lock();
 
-        // TODO - temp debug print
-        System.out.println("* DEBUG (hotelmanagement.updateranking) - \tlock acquired");
-
         Map<String, Hotel> newBest = new HashMap<String, Hotel>();
 
         // create a map to group hotels by city
@@ -335,28 +288,14 @@ public class HotelManagement {
             // calculate weight for recency (for each city) and check if local top hotel
             // changed
             for (String currentCity : hotelsByCity.keySet()) {
-                // TODO - temp debug print
-                System.out.println("\t* DEBUG (updateRanking) - \tcurrent city: " + currentCity);
                 List<Hotel> cityHotels = hotelsByCity.get(currentCity);
 
-                // TODO - temp debug print
-                System.out.println("\t\t* DEBUG - \tget hotels grouped by city for " + currentCity + ", ready to compute max review count");
                 // max number of review of an hotel in that city (is 1 in case of the list is
                 // empty)
                 int j = 0;
 
-                for (Hotel hotel : cityHotels) {
-                    // TODO - temp debug print
-                    System.out.println("* DEBUG - \t" + j + " - nome: " + hotel.getName() + " - recensioni: " + hotel.getReviewsNumber());
-                    j++;
-                    // System.out.println("\t\t*---- DEBUG - \t" + hotel.getName() + " has " + hotel.getReviews().size() + " reviews");
-                }
-
                 int maxReviewCount = cityHotels.stream().mapToInt(h -> h.getReviews().size()).max().orElse(1);
                 double maxRecentWeight = 0.0;
-
-                // TODO - temp debug print
-                System.out.println("\t\t* DEBUG - \tcompute max review count and ready to calculate weights for " + currentCity);
 
                 // calculate weights for recency
                 for (Hotel hotel : cityHotels) {
@@ -370,9 +309,6 @@ public class HotelManagement {
                         }
                     }
                 }
-
-                // TODO - temp debug print
-                System.out.println("\t\t* DEBUG - \tcalculate weights for " + currentCity);
 
                 Map<String, Double> rankValues = new HashMap<String, Double>();
                 // compute rank value for each hotel
@@ -403,9 +339,6 @@ public class HotelManagement {
                     rankValues.put(hotel.getId(), rankValue);
                 }
 
-                // TODO - temp debug print
-                System.out.println("\t\t* DEBUG - \tcumpute rank for " + currentCity);
-
                 // sort by rank value
                 cityHotels.sort((hotel1, hotel2) -> {
                     Double rank1 = rankValues.get(hotel1.getId());
@@ -434,9 +367,6 @@ public class HotelManagement {
             this.lock.unlock();
 
         }
-
-        // TODO - temp debug print
-        System.out.println("* DEBUG (hotelManagement.updateranking) - \tlock released");
 
         return newBest;
     }
@@ -498,20 +428,13 @@ public class HotelManagement {
      */
     public void saveHotel() {
 
-        // TODO - temp debug print
-        System.out.println("* DEBUG (hotelManagement.savehotel) - \twait for the lock (" + this.lock.hashCode() + ")");
         // get the lock
         this.lock.lock();
-        // TODO - temp debug print
-        System.out.println("* DEBUG (hotelManagement.savehotel) - \tlock acquired");
 
         List<Hotel> temp = new ArrayList<Hotel>(this.hotels.values());
         dataPersistence.saveHotels(temp, this.hotelPath);
 
         // release the lock
         this.lock.unlock();
-
-        // TODO - temp debug print
-        System.out.println("* DEBUG (hotelManagement.savehotel) - \tlock released");
     }
 }

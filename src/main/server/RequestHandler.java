@@ -38,6 +38,7 @@ public class RequestHandler implements Runnable {
     private Selector selector;
     private Boolean isRunning = true;
 
+    private HOTELIERServer server;
     private UserManagement userManagement;
     private HotelManagement hotelManagement;
     private DataPersistence dataPersistence;
@@ -61,9 +62,6 @@ public class RequestHandler implements Runnable {
 
         // initializing that thread
         backupThread.start();
-
-        // TODO - temp debug print
-        System.out.println("* DEBUG - \tbackup thread created and initialized");
 
         while (isRunning) {
             // read message from client, check its validity and dispatch it (handle non
@@ -192,7 +190,7 @@ public class RequestHandler implements Runnable {
     private void quit() {
         this.isRunning = false;
         try {
-            // TODO - this.server.removeHandler(this);
+            this.server.removeHandler(this);
             this.callerAddress.keyFor(this.selector).cancel();
             this.callerAddress.close();
         } catch (IOException e) {
@@ -203,13 +201,15 @@ public class RequestHandler implements Runnable {
 
     // CONSTRUCTORS
     public RequestHandler(UserManagement userManagement, HotelManagement hotelManagement, SocketChannel socketChannel,
-            Selector selector, InetAddress udpAddr, int udpPort, long interval, Lock saverLock) {
+            Selector selector, InetAddress udpAddr, int udpPort, long interval, Lock saverLock, HOTELIERServer server) {
         this.userManagement = userManagement;
         this.hotelManagement = hotelManagement;
         this.callerAddress = socketChannel;
         this.selector = selector;
         this.udpAddr = udpAddr;
         this.udpPort = udpPort;
+
+        this.server = server;
 
         this.dataPersistence = new DataPersistence(interval, saverLock, this.hotelManagement, this.userManagement);
         // Thread backupThread = new Thread();
@@ -223,24 +223,6 @@ public class RequestHandler implements Runnable {
         this.errors.add("CITY");
         this.errors.add("FORMAT");
     }
-
-    // // DATA SAVING
-
-    // public class DataSaver implements Runnable {
-    //     private long interval;
-    //     private Lock lock;
-    //     private HotelManagement hotelManagement;
-    //     private UserManagement userManagement;
-
-    //     public DataSaver(long interval, Lock lock, HotelManagement hotelManagement, UserManagement userManagement) {
-            
-    //     }  
-
-    //     @Override
-    //     public void run(){
-
-    //     }
-    // }
 
     // HANDLING METHODS
 
@@ -421,8 +403,16 @@ public class RequestHandler implements Runnable {
         this.cityName = cityName;
         this.review = review;
         try {
+            // TODO - temp debug print
+            System.out.println("* DEBUG - \tupdating user " + username + "(current points = " + this.userManagement.getUser(username).getBadge());
+
+            // increment user experience
+            this.userManagement.getUser(username).updatePoints();
+
+
             Map<String, Hotel> newBest = hotelManagement.addReview(this.getHotelName(), this.getCityName(),
                     this.getReview());
+
 
             this.write("Review added correctly.");
 

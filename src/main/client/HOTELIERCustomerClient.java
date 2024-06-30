@@ -216,7 +216,11 @@ public class HOTELIERCustomerClient {
                         }
                         break;
                     case 6:
-                        // TODO - show badges handling
+                        try{
+                            this.showMyBadges();
+                        } catch (Exception e) {
+                            System.out.println(e.getMessage());
+                        }
                         break;
                     case 7:
                         this.logout(this.username);
@@ -682,7 +686,7 @@ public class HOTELIERCustomerClient {
         String response = this.readAsString();
 
         if (!this.errors.contains(response)) {
-            System.out.println(response);
+            System.out.println("BADGE: " + response);
         } else {
             switch (response) {
                 case "USERN_N":

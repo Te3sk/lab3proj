@@ -59,19 +59,11 @@ public class UserManagement {
         User newUser = new User(username, psw);
         this.users.put(newUser.getUsername(), newUser);
 
-        // TODO - temp debug print
-        System.out.println("* DEBUG - \tsave user, now register on json");
-
         // // update json file
         // this.dataPersistence.saveUsers(this.users, this.dataFilePath);
 
         // release the lock
         this.lock.unlock();
-
-        
-        // TODO - temp debug print
-        System.out.println("* DEBUG (usermanagement.register) - \tlock released");
-
     }
 
     /**
@@ -117,11 +109,6 @@ public class UserManagement {
         // release the lock
         this.lock.unlock();
 
-        
-        // TODO - temp debug print
-        System.out.println("* DEBUG (usermanagement.login) - \tlock released");
-
-
         throw new Exception("Login successfull.");
     }
 
@@ -144,17 +131,10 @@ public class UserManagement {
         // get the lock
         this.lock.lock();
 
-        // TODO - temp debug print
-        System.out.println("* DEBUG (usermanagement.logout) - \tlock acquired");
-
         loggedInUsers.remove(username);
 
         // release the lock
         this.lock.unlock();
-
-        // TODO - temp debug print
-        System.out.println("* DEBUG (usermanagement.logout) - \tlock released");
-
     }
     
     /**
@@ -162,23 +142,13 @@ public class UserManagement {
      * Acquires a lock before saving the users and releases the lock after saving.
      */
     public void saveUsers() {
-
-        // TODO - temp debug print
-        System.out.println("* DEBUG (usermanagement) - \twait for the lock");
-
         // get the lock
         this.lock.lock();
 
-        // TODO - temp debug print
-        System.out.println("* DEBUG (usermanagement) - \tlock acquired");
-        
         this.dataPersistence.saveUsers(users, this.dataFilePath);
         
         // release the lock
         this.lock.unlock();
-
-        // TODO - temp debug print
-        System.out.println("* DEBUG (usermanagement.saveuser) - \tlock released");
     }
 
     /**
