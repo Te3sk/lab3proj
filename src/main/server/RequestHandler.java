@@ -77,6 +77,9 @@ public class RequestHandler implements Runnable {
                 msg = this.readAsString();
             }
 
+            // TODO - temp debug print
+            System.out.println("* \tDEBUG - \t" + msg);
+
             // check validity of the message (parameters number)
             int params = (int) msg.chars().filter(c -> c == '_').count();
             if (params == 1 && msg.equals("_QUIT")) { // quit message
@@ -84,7 +87,7 @@ public class RequestHandler implements Runnable {
                 this.quit();
             } else if (params < 2 || params > 6) { // if the message has the wrong number of parameters
                 // else check if the message has the right number of parameters
-                try {
+                try { 
                     this.write("FORMAT");
                 } catch (Exception e) {
                     // ! Error message !
@@ -97,7 +100,7 @@ public class RequestHandler implements Runnable {
             // handle if the channel is closed (and print a msg)
             this.quit();
             // * Log message *
-            System.out.println("A client close the connection.");
+            System.out.println("A client close the connection. " + e.getMessage());
         } catch (IOException e) {
             // set the focus on read operation
             this.callerAddress.keyFor(this.selector).interestOps(SelectionKey.OP_READ);

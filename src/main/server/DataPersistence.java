@@ -15,8 +15,6 @@ import java.util.concurrent.locks.Lock;
 public class DataPersistence implements Runnable {
     private long interval;
     private Lock lock;
-    private String hotelFilePath;
-    private String userFilePath;
     private HotelManagement hotelManagement;
     private UserManagement userManagement;
 

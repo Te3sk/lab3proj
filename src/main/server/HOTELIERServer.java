@@ -27,7 +27,7 @@ public class HOTELIERServer implements Runnable {
     private InetAddress udpAddr;
     private int udpPort;
     private boolean isRunning;
-    private ServerSocketChannel serverSocketChannel;
+    private ServerSocketChannel serverSocketChannel; 
     private UserManagement userManagement;
     private HotelManagement hotelManagement;
     private List<RequestHandler> requestHandlers;
@@ -66,6 +66,9 @@ public class HOTELIERServer implements Runnable {
             this.isRunning = true;
             this.requestHandlers = new ArrayList<>();
             this.executor = new ThreadPoolExecutor(1, 100, 300, TimeUnit.SECONDS, new LinkedBlockingDeque<>());
+            this.dataPersistence = new DataPersistence(interval, this.lock, this.hotelManagement, this.userManagement);
+            Thread backupThread = new Thread(this.dataPersistence);
+            backupThread.start();
         } catch (Exception e) {
             // ! error message !
             System.out.println("Error during server construction: " + e.getMessage());
@@ -86,6 +89,24 @@ public class HOTELIERServer implements Runnable {
             // take the socketchannel of this current handler
             SocketChannel handlerChannel = handler.getCallerAddres();
             if (handlerChannel.getRemoteAddress().equals(socketChannel.getRemoteAddress())) {
+                // TODO - temp debug print
+                System.out.println("* DEBUG - \tHANDLER MATCH");
+
+                if (handlerChannel.isOpen()) {
+                    // TODO - temp debug print
+                    System.out.println("* DEBUG - \tCHANNEL OPEN");
+                } else {
+                    // TODO - temp debug print
+                    System.out.println("* DEBUG - \tCHANNEL CLOSED");
+                }
+
+                if (handlerChannel.isConnected()) {
+                    // TODO - temp debug print
+                    System.out.println("* DEBUG - \tHANDLER CONNESSO");
+                } else {
+                    // TODO - temp debug print
+                    System.out.println("* DEBUG - \tHANDLER NON CONNESSO");
+                }
                 // if the remote address match with that one in the socketchannel in the
                 // parameter
                 return handler;
@@ -109,8 +130,9 @@ public class HOTELIERServer implements Runnable {
         // TODO - remove, already initialized in the constructor
         // Create a ThreadPoolExecutor with a core of pool (size 1, max size 100)
         // and keep-alive time of 300 sec for idle threads
-        // // ThreadPoolExecutor executor = new ThreadPoolExecutor(1, 100, 300, TimeUnit.SECONDS,
-        // //         new LinkedBlockingDeque<>());
+        // // ThreadPoolExecutor executor = new ThreadPoolExecutor(1, 100, 300,
+        // TimeUnit.SECONDS,
+        // // new LinkedBlockingDeque<>());
 
         // Loop while the server is running
         while (isRunning) {
@@ -150,6 +172,9 @@ public class HOTELIERServer implements Runnable {
                         // TODO - temp debug print
                         System.out.println("* DEBUG - \tnew connection from " + connection.getRemoteAddress());
                     } else if (key.isReadable()) { // else if the key's channel is ready to read data
+                        // TODO - temp debug print
+                        System.out.println("*\t DEBUG - \tready to read datas...");
+
                         // get the connection from the key
                         SocketChannel connection = (SocketChannel) key.channel();
                         // cancel the key's interest in read operations
@@ -162,32 +187,27 @@ public class HOTELIERServer implements Runnable {
                         if (handler != null) {
                             // // // submit the request handler to the executor
                             // // executor.submit(handler);
+                            // TODO - temp debug print
+                            System.out
+                                    .println("*\t DEBUG - \taccept new request from " + connection.getRemoteAddress());
                             // submit the request to the threadpool
                             executor.submit(new Worker(handler));
-                        } else {
-                            // Nessun handler trovato, chiudi la connessione
-                            connection.close();
-                            key.cancel();
 
+                            // reset the interest ops to read
+                            key.interestOps(SelectionKey.OP_READ);
+                        } else {
                             // TODO - temp debug print
-                            System.out.println("* DEBUG - \tclose connection from " + connection.getRemoteAddress());
+                            System.out.println("* \tDEBUG - \tclose connection from " + connection.getRemoteAddress());
+                            // Nessun handler trovato, chiudi la connessione
+                            // connection.close();
+                            key.cancel();
 
                             // Rimuovi il RequestHandler dalla lista
                             synchronized (this.requestHandlers) {
-                                Iterator<RequestHandler> tempIterator = this.requestHandlers.iterator();
-                                while (tempIterator.hasNext()) {
-                                    RequestHandler h = tempIterator.next();
-                                    try {
-                                        if (h.getCallerAddres().equals(connection)) {
-                                            tempIterator.remove();
-                                        }
-                                    } catch (Exception e) {
-                                        // ! Error message !
-                                        System.out.println("Error during handler removal: " + e.getMessage());
-                                    }
-                                }
+                                this.requestHandlers.removeIf(h -> h.getCallerAddres().equals(connection));
                             }
                         }
+
                     }
 
                     // remove the key from the iterator
