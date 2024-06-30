@@ -543,9 +543,11 @@ public class HOTELIERCustomerClient {
             this.write(req);
             response = this.readAsString();
         } catch (IOException e) {
-            System.out.println("IOError during logout: " + e.getMessage());
+            System.out.println("IOError during logout: " + e.getMessage() + "\n\tCan't logout");
+            return;
         } catch (Exception e) {
-            System.out.println("Unexpected error during logout: " + e.getMessage());
+            System.out.println("Unexpected error during logout: " + e.getMessage() + "\n\tCan't logout");
+            return;
         }
 
         if (!this.errors.contains(response)) {

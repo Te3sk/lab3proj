@@ -57,14 +57,6 @@ public class RequestHandler implements Runnable {
      */
     @Override
     public void run() {
-        // TODO - remove this, put it in HOTELIERServer
-        // creating thread for saving data
-        // Thread backupThread = new Thread(this.dataPersistence);
-
-        // TODO - remove this, put it in HOTELIERServer
-        // initializing that thread
-        // backupThread.start();
-
         // read message from client, check its validity and dispatch it (handle non
         // correct messages)
         try {
@@ -195,10 +187,11 @@ public class RequestHandler implements Runnable {
     private void quit() {
         // TODO (remove) - this.isRunning = false;
         try {
-            this.server.removeHandler(this);
-            this.callerAddress.keyFor(this.selector).cancel();
-            this.callerAddress.close();
-        } catch (IOException e) {
+            // this.callerAddress.keyFor(this.selector).cancel();
+            // this.callerAddress.close();
+            // this.server.removeHandler(this);
+            
+        } catch (Exception e) { 
             // ! Error message !
             System.out.println("Error when closing the conncetion: " + e.getMessage());
         }
@@ -213,11 +206,7 @@ public class RequestHandler implements Runnable {
         this.selector = selector;
         this.udpAddr = udpAddr;
         this.udpPort = udpPort;
-
         this.server = server;
-
-        // TODO (remove) - this.dataPersistence = new DataPersistence(interval, saverLock, this.hotelManagement, this.userManagement);
-        // Thread backupThread = new Thread();
 
         // set error messages
         this.errors.add("USERN_Y");

@@ -153,6 +153,8 @@ public class HOTELIERServer implements Runnable {
                 while (keyIterator.hasNext()) { // iterate over selection keys
                     SelectionKey key = keyIterator.next();
 
+                    keyIterator.remove();
+                    
                     if (key.isAcceptable()) { // if the key's channel is ready to accept a new connection
                         // accept the connection
                         SocketChannel connection = this.serverSocketChannel.accept();
