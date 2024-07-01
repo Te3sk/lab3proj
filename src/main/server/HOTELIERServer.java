@@ -295,13 +295,17 @@ public class HOTELIERServer implements Runnable {
             // TODO - temp debug print
             System.out.println("* DEBUG - \tRANK UPDATED");
 
-            if (newBest != null) {
+            if (newBest != null && !(newBest.isEmpty())) {
                 // TODO - temp debug print
                 System.out.println("* DEBUG - \tMANDA MESSAGGIO NEW LOCAL BEST");
                 String msg = "New local best hotels:\n";
-                for (Hotel hotel : newBest.values()) {
-                    msg += hotel.toString() + "\n";
+                
+                for(String c : newBest.keySet()) {
+                    msg += "- " + c + " : " + newBest.get(c).getName() + " -";
                 }
+
+                // TODO - temp debug print
+                System.out.println("* DEBUG - \t" + msg);
 
                 try{
                     byte[] buffer = msg.getBytes();
@@ -310,11 +314,15 @@ public class HOTELIERServer implements Runnable {
                 } catch (IOException e) {
                     System.out.println("Error sending notification: " + e.getMessage());
                 }
+
+                newBest = null;
             }
 
             // TODO - temp debug print
             System.out.println("* DEBUG - \tFINE NOTIFICATION SERVICE");
         }
     }
+    
+    
     // TODO - handling server.close
 }

@@ -413,7 +413,9 @@ public class HOTELIERCustomerClient {
 
                     // take the lock before handling the notification
                     this.lock.lock();
-
+                    
+                    // TODO - temp debug print
+                    System.out.println("* DEBUG - \tMESSAGGIO UDP RICEVUTO >" + msg + "<");
                     try{
                         // * Log message *
                         System.out.println("----------------------------\n New top hotel in local ranking:\n" + msg
@@ -544,6 +546,9 @@ public class HOTELIERCustomerClient {
      * @param username
      */
     public void logout(String username) {
+
+        // TODO - temp debug print
+        System.out.println("* DEBUG - \tLOGOUT METHOD");
         String req = "LOGOUT_" + this.socketChannel + "_" + this.username;
         String response = "";
 
@@ -727,19 +732,33 @@ public class HOTELIERCustomerClient {
             if (this.logged) {
                 this.logout(this.username);
             }
+            
+            // TODO - temp debug print
+            System.out.println("* DEBUG - \tlogged out");
 
             // close the socket channel if is open
             if (this.socketChannel != null && this.socketChannel.isOpen()) {
                 this.socketChannel.close();
             }
 
+            // TODO - temp debug print
+            System.out.println("* DEBUG - \tsocket close");
+
             // close the selector if is open
             if (this.selector != null && this.selector.isOpen()) {
                 this.selector.close();
             }
 
+            // TODO - temp debug print
+            System.out.println("* DEBUG - \tselector close");
+
             // close the multicast socket if is open
-            this.notificationReciever.stop();
+            if (this.notificationReciever != null) {
+                this.notificationReciever.stop();
+            }
+
+            // TODO - temp debug print
+            System.out.println("* DEBUG - \tnotification close");
 
             this.isConnect = false;
             // * Log message *

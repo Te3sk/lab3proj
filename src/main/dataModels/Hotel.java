@@ -16,6 +16,27 @@ public class Hotel {
     private double rate;
     private Map<String, Integer> ratings;
 
+    public double computeScore (double interval) {
+        if (this.reviews == null) {
+            this.reviews = new ArrayList<Review>();
+            return 0.0;
+        }
+
+        double score = 0.0;
+
+        score += this.rate * this.reviews.size();
+        for (int ratings : this.ratings.values()) {
+            score += ((double)ratings) * (this.reviews.size() / 4);
+        }
+        for (Review review : this.reviews) {
+            if (review.getDate().getTime() >= System.currentTimeMillis() / 1000 - interval) {
+                score += 1.0;
+            }
+        }
+
+        return score;
+    }
+
     @Override
     public String toString() {
         String string = "";
