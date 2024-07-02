@@ -83,6 +83,7 @@ public class HOTELIERCustomerClient {
             // initialize notification thread
             this.notificationReciever = new NotificationReciever(udpAddr, udpPort, this.lock, this.logged);
             this.notificationThread = new Thread(this.notificationReciever);
+            this.notificationThread.start();
         } catch (IOException e) {
             throw new Exception(e.getMessage());
         } catch (Exception e) {
@@ -402,8 +403,6 @@ public class HOTELIERCustomerClient {
                     // take the lock before handling the notification
                     this.lock.lock();
 
-                    // TODO - temp debug print
-                    System.out.println("* DEBUG - \tMESSAGGIO UDP RICEVUTO >" + msg + "<");
                     try {
                         // * Log message *
                         System.out.println("----------------------------\n New top hotel in local ranking:\n" + msg

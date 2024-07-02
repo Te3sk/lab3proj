@@ -111,21 +111,13 @@ public class Review {
     }
 
     public static Review fromString(String str) throws Exception, ParseException {
-        // TODO - fix this methods (fromString)
         Double rate = 0.0;
         Map<String, Integer> ratings = new HashMap<>();
         Date date = new Date();
         int temp = -1;
 
-        // TODO - temp debug print
-        System.out.println("* DEBUG (Review.fromString) - \t - str >" + str + "<");
-
         String[] parts = str.split(";");
-        
-        for (String part : parts) {
-            // TODO - temp debug print
-            System.out.println("* DEBUG (Review.fromString) - \tpart >" + part + "<");
-        }
+
 
         if (parts.length != 6) {
             throw new Exception("Invalid string format for Review object.");
@@ -174,8 +166,6 @@ public class Review {
         // create and return the review
         Review review = new Review(rate, ratings, date);
 
-        // TODO - temp debug print
-        System.out.println("* DEBUG - \treview parsed:\n" + review.printReview());
         return review;
     }
 

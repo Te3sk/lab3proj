@@ -21,7 +21,6 @@ import java.util.concurrent.locks.Lock;
 
 import main.dataModels.Hotel;
 import main.dataModels.Review;
-import main.dataModels.User;
 
 public class RequestHandler implements Runnable {
     private InetAddress udpAddr;
@@ -66,9 +65,6 @@ public class RequestHandler implements Runnable {
             while (msg.isEmpty()) {
                 msg = this.readAsString();
             }
-
-            // TODO - temp debug print
-            System.out.println("* \tDEBUG - \t" + msg);
 
             // check validity of the message (parameters number)
             int params = (int) msg.chars().filter(c -> c == '_').count();
@@ -477,7 +473,7 @@ public class RequestHandler implements Runnable {
             // ! Error message !
             System.out.println("Error during notification sending: " + e.getMessage());
         } finally {
-            
+
             if (udpSock != null) {
                 udpSock.close();
             }

@@ -74,9 +74,6 @@ public class HOTELIERServer implements Runnable {
             Thread backupThread = new Thread(this.dataPersistence);
             backupThread.start();
 
-            // TODO - temp debug print
-            System.out.println("* DEBUG - \tintervallo : " + this.timeInterval);
-
             this.multicastSocket = new MulticastSocket(broadcastPort);
             this.notificationService = new NotificationService(this.multicastSocket, this.udpPort, this.udpAddr, this.hotelManagement);
 
@@ -102,24 +99,6 @@ public class HOTELIERServer implements Runnable {
             // take the socketchannel of this current handler
             SocketChannel handlerChannel = handler.getCallerAddres();
             if (handlerChannel.getRemoteAddress().equals(socketChannel.getRemoteAddress())) {
-                // TODO - temp debug print
-                System.out.println("* DEBUG - \tHANDLER MATCH");
-
-                if (handlerChannel.isOpen()) {
-                    // TODO - temp debug print
-                    System.out.println("* DEBUG - \tCHANNEL OPEN");
-                } else {
-                    // TODO - temp debug print
-                    System.out.println("* DEBUG - \tCHANNEL CLOSED");
-                }
-
-                if (handlerChannel.isConnected()) {
-                    // TODO - temp debug print
-                    System.out.println("* DEBUG - \tHANDLER CONNESSO");
-                } else {
-                    // TODO - temp debug print
-                    System.out.println("* DEBUG - \tHANDLER NON CONNESSO");
-                }
                 // if the remote address match with that one in the socketchannel in the
                 // parameter
                 return handler;
@@ -176,13 +155,7 @@ public class HOTELIERServer implements Runnable {
                                     connection, this.selector, this.udpAddr, this.udpPort, this.timeInterval, this.lock,
                                     this));
                         }
-
-                        // TODO - temp debug print
-                        System.out.println("* DEBUG - \tnew connection from " + connection.getRemoteAddress());
                     } else if (key.isReadable()) { // else if the key's channel is ready to read data
-                        // TODO - temp debug print
-                        System.out.println("*\t DEBUG - \tready to read datas...");
-
                         // get the connection from the key
                         SocketChannel connection = (SocketChannel) key.channel();
                         // cancel the key's interest in read operations
@@ -193,19 +166,12 @@ public class HOTELIERServer implements Runnable {
                         }
 
                         if (handler != null) {
-                            // // // submit the request handler to the executor
-                            // // executor.submit(handler);
-                            // TODO - temp debug print
-                            System.out
-                                    .println("*\t DEBUG - \taccept new request from " + connection.getRemoteAddress());
                             // submit the request to the threadpool
                             executor.submit(new Worker(handler));
 
                             // reset the interest ops to read
                             key.interestOps(SelectionKey.OP_READ);
                         } else {
-                            // TODO - temp debug print
-                            System.out.println("* \tDEBUG - \tclose connection from " + connection.getRemoteAddress());
                             // Nessun handler trovato, chiudi la connessione
                             // connection.close();
                             key.cancel();
@@ -279,30 +245,16 @@ public class HOTELIERServer implements Runnable {
 
         @Override
         public void run() {
-            // TODO - temp debug print
-            System.out.println("* DEBUG - \tSTART NOTIFICATION SERVICE ");
-
             Map<String, Hotel> newBest = this.hotelManagement.updateRanking();
-
-            // TODO - temp debug print
-            System.out.println("* DEBUG - \tRANK UPDATED");
-
             if (newBest != null && !(newBest.isEmpty())) {
-                // TODO - temp debug print
-                System.out.println("* DEBUG - \tMANDA MESSAGGIO NEW LOCAL BEST");
                 String msg = "New local best hotels:\n";
                 
                 for(String c : newBest.keySet()) {
                     msg += "- " + c + " : " + newBest.get(c).getName() + " -";
                 }
 
-                // TODO - temp debug print
-                System.out.println("* DEBUG - \t" + msg);
-
                 try{
                     byte[] buffer = msg.getBytes();
-                    // TODO - temp debug print
-                    System.out.println("* DEBUG - \tporcoddio byte: " + buffer.length);
                     DatagramPacket packet = new DatagramPacket(buffer, 1024, this.multicastAddr, this.multicastPort);
                     this.udpSock.send(packet);
                 } catch (IOException e) {
@@ -311,12 +263,6 @@ public class HOTELIERServer implements Runnable {
 
                 newBest = null;
             }
-
-            // TODO - temp debug print
-            System.out.println("* DEBUG - \tFINE NOTIFICATION SERVICE");
         }
     }
-    
-    
-    // TODO - handling server.close
 }
