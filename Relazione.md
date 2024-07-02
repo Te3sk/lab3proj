@@ -10,83 +10,95 @@
   - 
 - [ ] istruzioni su compilazione/esecuzione
 
-# Relazione Progetto Laboratorio 3
+# Relazione Progetto Laboratorio
 ## Indice
-1. [Componenti](#componenti)
-   1. [Server-Side](#server-side)
-      1. [`ServerMain`](#servermain)
-      2. [`HOTELIERServer`](#hotelierserver)
-      3. [`RequestHandler`](#requesthandler)
+- [todo](#todo)
+- [Relazione Progetto Laboratorio](#relazione-progetto-laboratorio)
+  - [Indice](#indice)
+  - [Protocolli](#protocolli)
+    - [Connessione client-server](#connessione-client-server)
+    - [Connessione Broadcast](#connessione-broadcast)
+  - [Server side](#server-side)
+    - [`ServerMain`](#servermain)
+    - [`HOTELIERServer`](#hotelierserver)
+    - [`RequestHandler`](#requesthandler)
+    - [`DataPersistence`](#datapersistence)
+    - [`HotelManagement`](#hotelmanagement)
+      - [Algoritmo per l'assegnameto del rank](#algoritmo-per-lassegnameto-del-rank)
+    - [`UserManagement`](#usermanagement)
+  - [Client-side](#client-side)
+    
+    
+## Protocolli
+### Connessione client-server
+Il client invia messaggi sotto forma di stringa al server tramite connessione TCP. Il formato dei messaggi è il seguente:
+```java
+"TYPE_indirizzoChiamante_parametro1_parametro2_parametro3_parametro4"
+```
+I parametri possono essere al massimo 4: a seconda del tipo di richiesta cambia la quantità e il tipo.
 
-## Componenti
+Le risposte del server, sempre sotto forma di stringhe, possono essere di 2 tipi:
+- In caso di richiesta corretta viene inviata direttamente la stringa che verrà stampata all'utente sul client, che può contenere la risposta effettiva o l'eventuale problema che il server ha riscontrato.
+- In caso di richiesta errata viene inviato uno specifico codice di errore:
+  - `USERN_Y` se l'username è già presente (per la registrazione)
+  - `USERN_N` se l'username non è presente (per il login)
+  - `EMPTYF` se uno dei campi (parametri) è stato inviato vuoto
+  - `WRONGPSW` se la password è errata
+  - `HOTEL` se l'hotel non è presente
+  - `CITY` se la città non è presente
+  - `FORMAT` se la richiesta non è stata formattata correttamente
 
-### Server-Side
+### Connessione Broadcast
+L'invio di notifiche da parte del server a i client loggati in caso cambi l'hotel con il maggior ranking in una città, è gestita da una connessione di tipo UDP. Anche in questo caso, il server invia la stringa finale che sarà stampata dal client.
 
-#### `ServerMain`
+## Server side
 
-La classe `ServerMain` è il punto di ingresso dell'applicazione server che legge i parametri di configurazione da un file di properties e avvia il server `HOTELIERServer` corrispondente.
+### `ServerMain`
+La classe `ServerMain` è il punto di ingresso dell'applicazione server che legge i parametri di configurazione da un file di properties, inizializza e avvia il server `HOTELIERServer` corrispondente. 
 
-##### Metodo `main`
+### `HOTELIERServer`
+La classe `HOTELIERServer` rappresenta il server vero e proprio che gestisce connessioni TCP e UDP del sistema. Nel costruttore si inizializzano tutte le risorse necessarie: gestori per utenti e hotel, canale socket, selettore e ThreadPool. Il metodo `fetchHandler(SocketChannel socketChannel)` restituisce il gestore di richieste corrispondente a un certo `SocketChannel` e il metodo `removeHandler(RequestHandler handler)` rimuove un gestore di richieste dalla lista. Il metodo `run()` invece gestisce le connessioni dei client e le loro richieste, assegnando ognuna di queste ad un thread. I vari worker elaborano le richieste tramite la classe `RequestHandler` che implementa `Runnable`. La classe `NotificationService` è incaricata di gestire tutto il processo di notifica UDP. 
 
-Il metodo `main` è il punto di avvio dell'applicazione server. Utilizza un blocco try-with-resources per garantire la chiusura corretta dello stream di input dopo l'uso. Carica le proprietà dal file di configurazione (`serverConfig.properties`) e inizializza il server `HOTELIERServer` con i parametri letti.
-I passaggi principali del metodo sono: lettura, estrazione e conversione delle proprietà di configurazione dal file `serverConfig.properties`; Istaziazione di un nuovo oggetto `HOTELIERServer` con i parametri letti e chiamata del metodo `run()` del server per avviare l'esecuzione.
+### `RequestHandler`
+`RequestHandler` legge il contenuto delle richieste, elabora una risposta e la invia al client. Il metodo `run()` esegue la logica principale della classe: controlla la validità del messaggio e lo passa al metodo `dispatcher(String msg)`, il quale chiamera il metodo opportuno per gestire la richiesta a seconda del tipo. Oltre ad i metodi per gestire le signole richieste, questa classe contiene:
+- `readAsString()` per leggere i dati che arrivano sulla socket e ritornarli come stringa
+- `write(String message)` per inviare messaggi sulla socket
+- `sendNotification(String msg)` per lanciare la notifica sul canale udp
+- `quit()` per gestire il caso in cui il client chiuda la connessione
 
-#### HOTELIERServer
+### `DataPersistence`
+Questa classe implementa `Runnable` e viene eseguita periodicamente da un thread creato in `HOTELIERServer` per salvare i dati di utenti e hotel nei rispettivi file JSON in `data\`. I metodi `saveUsers`, `loadUsers`, `saveHotels`, `loadHotels`, caricano e scaricano i dati rispettivamente di utenti e hotel. I dati vengono scaricati dai costruttori di `HotelManagement` e `UserManagement`. Il metodo `run()` usa i metodi per salvare i dati sincronizzandone l'accesso con una `Lock`.
 
-La classe `HOTELIERServer` rappresenta un server che gestisce connessioni TCP e UDP per un sistema di gestione alberghiera.
+### `HotelManagement`
+Questa classe fornisce funzionalità per la ricerca di hotel, l'aggiunta di recensioni, il recupero di recensioni e l'aggiornamento delle classifiche degli hotel. La classe utilizza un blocco per garantire la sicurezza del thread durante l'accesso e la modifica dei dati dell'hotel. 
 
-##### Costruttore
+I dati dell'hotel vengono archiviati in una mappa, dove la chiave è l'ID dell'hotel e il valore è l'oggetto Hotel, in modo da avere un accesso diretto agli hotel con un riferimento univoco e di favorire un'eventuale aggiornamento dei dati.
 
-Il costruttore `HOTELIERServer` inizializza tutte le risorse necessarie per avviare il server, inclusi i gestori per utenti e alberghi, il canale del socket, il selettore e il ThreadPoolExecutor. I parametri sono stati precedentemente letti dal file di configurazione.
+#### Algoritmo per l'assegnameto del rank
+Tramite il metodo `calculateHotelScore()` viene assegnato un punteggo agli hotel con la seguente formula:
+$$
+\begin{array}{l}
+G = \sum^{n}_{i = 0} g_i
+\\\\
+S = \sum^{n}_{j = 0} \frac{cleaningScore_i + positionScore_i + serviceScore_i + qualityScore_i}{4}
+\\\\
+R = e^{-d}
+\\\\
+totalScore = G \times 0.5 + S \times 0.3 + R \times 0.2
+\end{array}
+$$
+dove:
+- $n$ è il numero totale di recensioni per quell'hotel
+- $g_i$ è il valore della  `globalScore` della recensione numero $i$
+- $fieldScore_i$ è il valore del signolo campo della recensione $i$
+- $d$ è il numero di giorni passati dall'ultima recensione
+`cityHotelsXranking` gli hotel nella lista vengono ordinati 
 
-##### Metodi
+### `UserManagement`
+Analogamente questa classe fornisce funzionalità per registrare nuovi utenti, accedere agli utenti esistenti, disconnettere gli utenti, salvare i dati dell'utente in un file e recuperare le informazioni dell'utente.
 
-- `run()`: Metodo principale che gestisce il ciclo di vita del server, gestendo la registrazione di nuove connessioni e la lettura di dati dai canali pronti.
-- `fetchHandler(SocketChannel socketChannel)`: Restituisce il gestore di richieste corrispondente a un certo `SocketChannel`.
-- `removeHandler(RequestHandler handler)`: Rimuove un gestore di richieste dalla lista.
+## Client-side
 
-##### Vantaggi delle scelte implementative
 
-1. **Gestione non bloccante**: Utilizza un `Selector` per gestire le operazioni di I/O non bloccanti, consentendo al server di gestire molteplici connessioni senza dover dedicare un thread a ciascuna.
-   
-2. **ThreadPoolExecutor**: Utilizzo di un `ThreadPoolExecutor` per gestire l'esecuzione dei task asincroni, migliorando l'efficienza nell'elaborazione delle richieste.
 
-3. **Sincronizzazione sicura**: Utilizzo di metodi sincronizzati e semafori (`Lock`) per garantire la coerenza nei dati condivisi tra i thread, evitando situazioni di race condition.
 
-4. **Configurazione flessibile**: Il server è configurato con parametri come indirizzi, porte e intervalli di tempo tramite il costruttore, rendendolo adattabile a diversi ambienti di esecuzione.
-
-Questi approcci aiutano a realizzare un server robusto, scalabile e efficiente, adatto per gestire un sistema complesso di gestione alberghiera attraverso connessioni TCP e UDP.
-
-#### `RequestHandler`
-
-La classe `RequestHandler` gestisce le richieste dai client attraverso un canale socket. Legge i messaggi, ne verifica la validità e li dispaccia ai metodi appropriati all'interno dell'applicazione server `HOTELIERServer`.
-
-##### Metodi principali
-
-Il `RequestHandler` implementa la logica principale per gestire le richieste dai client, come autenticazione degli utenti, ricerca di hotel, inserimento di recensioni e invio di notifiche tramite UDP.
-
-###### Metodi di gestione delle richieste
-
-- **`run()`**: Esegue la logica principale del `RequestHandler` in un thread separato. Legge i messaggi dal client, ne verifica la validità e li dispaccia al metodo appropriato o gestisce gli errori.
-  
-- **`dispatcher(String msg)`**: Gestisce il dispatching dei messaggi in base al formato e al tipo di richiesta ricevuta. Chiama i metodi corrispondenti come `signIn`, `logIn`, `logOut`, `searchHotel`, `searchAllHotels`, `insertReview` e `showMyBadges`.
-
-- **Metodi di manipolazione dei dati e comunicazione:** **`signIn`, `logIn`, `logOut`, `searchHotel`, `searchAllHotels`, `insertReview`, `showMyBadges`**: Gestiscono le diverse operazioni di manipolazione dei dati, comunicando con le classi di gestione utente (`UserManagement`) e hotel (`HotelManagement`) per eseguire operazioni come registrazione, accesso, ricerca e inserimento di recensioni.
-
-- **Metodi di comunicazione**
-  
-  - **`sendNotification(String msg)`**: Invia una notifica tramite protocollo UDP.
-
-  - **`readAsString()` e `write(String message)`**: Gestiscono la lettura e la scrittura dei messaggi dal e verso il client.
-
-##### Vantaggi delle scelte implementative
-
-- **Gestione multithreading**: Utilizza thread separati per operazioni intensive come la persistenza dei dati.
-  
-- **Utilizzo efficiente delle risorse**: Utilizzo di `ByteBuffer` per la gestione efficiente dei dati in lettura e scrittura.
-
-- **Separazione delle responsabilità**: Separazione delle operazioni di gestione delle richieste (`RequestHandler`) dalle operazioni di gestione dei dati (`UserManagement`, `HotelManagement`), migliorando la manutenibilità e l'estensibilità del codice.
-
-- **Gestione degli errori**: Gestione degli errori attraverso la segnalazione di messaggi di errore appropriati ai client.
-
-Questo approccio consente di gestire in modo efficiente le richieste dai client, mantenendo un'architettura scalabile e facile da mantenere per un'applicazione server robusta.

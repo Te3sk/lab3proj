@@ -9,9 +9,6 @@ import java.util.Set;
 
 import main.dataModels.Review;
 
-// TODO - remove (2) login option in homepage when user is logged
-// TODO - user can't insert a username with "_" char, handle it
-
 public class CLI {
     // standard message
     private String dash = "---------------------------------";
@@ -66,7 +63,6 @@ public class CLI {
 
         } else {
             // logout, searchHotel, searchAllHotels, insertReview, showMyBadges
-            // TODO (check if is the rightone) - valid.add(2);
             valid.add(3);
             valid.add(4);
             valid.add(5);
@@ -301,7 +297,6 @@ public class CLI {
     }
 
     public void exit() {
-        // TODO
         this.sc.close();
     }
 }

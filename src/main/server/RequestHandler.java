@@ -37,24 +37,21 @@ public class RequestHandler implements Runnable {
 
     private ByteBuffer buffer = ByteBuffer.allocateDirect(1024);
     private Selector selector;
-    // TODO (remove) - private Boolean isRunning = true;
 
     private HOTELIERServer server;
     private UserManagement userManagement;
     private HotelManagement hotelManagement;
-    // TODO (remove) - private DataPersistence dataPersistence;
     private Set<String> errors = new HashSet<String>();
 
     /**
-     * Executes the main logic of the RequestHandler in a separate thread.
-     * Continuously reads messages from the client, checks their validity, and
-     * dispatches them.
-     * If the message is a quit message, the server is terminated.
-     * If the message has an incorrect number of parameters, a "FORMAT" response is
-     * sent back to the client.
-     * If the message is valid, it is dispatched to the appropriate handler.
-     * Handles exceptions related to reading from the client and closing the
-     * channel.
+     * Executes the logic for handling client requests.
+     * Reads a message from the client, checks its validity, and dispatches it.
+     * If the message is a quit message, the server quits.
+     * If the message has the wrong number of parameters, it sends a "FORMAT" response.
+     * If the message is valid, it dispatches the message to the appropriate handler.
+     *
+     * @throws ClosedChannelException if the channel is closed
+     * @throws IOException if an I/O error occurs
      */
     @Override
     public void run() {
@@ -185,8 +182,6 @@ public class RequestHandler implements Runnable {
      * Close the connection
      */
     private void quit() {
-        // TODO (remove) - this.isRunning = false;
-        // TODO - questo va messo solo quando gli arriva il quit (=> gestire bene la chiusura del client)
         try {
             this.callerAddress.keyFor(this.selector).cancel();
             this.callerAddress.close();
@@ -398,10 +393,6 @@ public class RequestHandler implements Runnable {
         this.cityName = cityName;
         this.review = review;
         try {
-            // TODO - temp debug print
-            System.out.println("* DEBUG - \tupdating user " + username + "(current points = "
-                    + this.userManagement.getUser(username).getBadge());
-
             // increment user experience
             this.userManagement.getUser(username).updatePoints();
 
@@ -486,7 +477,7 @@ public class RequestHandler implements Runnable {
             // ! Error message !
             System.out.println("Error during notification sending: " + e.getMessage());
         } finally {
-            // TODO
+            
             if (udpSock != null) {
                 udpSock.close();
             }
@@ -494,10 +485,10 @@ public class RequestHandler implements Runnable {
     }
 
     /**
-     * Reads a client message
-     * 
-     * @return The client message as a String
-     * @throws IOException Thrown if an unexpected error occurs
+     * Reads the incoming data from the callerAddress and returns it as a string.
+     *
+     * @return The incoming data as a string.
+     * @throws IOException If an I/O error occurs while reading the data.
      */
     protected String readAsString() throws IOException {
         StringBuilder stringBuilder = new StringBuilder();
@@ -519,10 +510,10 @@ public class RequestHandler implements Runnable {
     }
 
     /**
-     * Writes the given message on the socket
-     * 
-     * @param message The message to be sent
-     * @throws IOException Thrown if an unexpected error occurs
+     * Writes a message to the callerAddress.
+     *
+     * @param message the message to be written
+     * @throws IOException if an I/O error occurs while writing the message
      */
     protected void write(String message) throws IOException {
         // open a selector

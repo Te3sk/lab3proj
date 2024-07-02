@@ -2,7 +2,6 @@ package main.client;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
-import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.MulticastSocket;
@@ -32,7 +31,6 @@ public class HOTELIERCustomerClient {
     private Selector selector;
     private ByteBuffer buffer = ByteBuffer.allocateDirect(1024);
     private MulticastSocket notificator;
-    // TODO (remove) - private ExecutorService executorService;
     private Map<Integer, String> op = new HashMap<Integer, String>();
     private Boolean isConnect;
 
@@ -83,7 +81,7 @@ public class HOTELIERCustomerClient {
             }
 
             // initialize notification thread
-            this.notificationReciever = new NotificationReciever(udpAddr, udpPort, this.lock);
+            this.notificationReciever = new NotificationReciever(udpAddr, udpPort, this.lock, this.logged);
             this.notificationThread = new Thread(this.notificationReciever);
         } catch (IOException e) {
             throw new Exception(e.getMessage());
@@ -94,8 +92,6 @@ public class HOTELIERCustomerClient {
 
         if (this.isConnect == true) { // if connect initialize cli, errors and operations
             this.cli = new CLI();
-            // TODO - this.executorService.submit() - classe per ricevere notifiche sulla
-            // multicast socket
 
             // set error messages
             this.errors.add("USERN_Y");
@@ -104,7 +100,6 @@ public class HOTELIERCustomerClient {
             this.errors.add("WRONGPSW");
             this.errors.add("HOTEL");
             this.errors.add("CITY");
-            // TODO
             this.errors.add("FORMAT");
 
             // set operations map
@@ -150,22 +145,19 @@ public class HOTELIERCustomerClient {
      *                   action.
      */
     protected void handleUser() {
-        // TODO - temp debug print
-        System.out.println("* DEBUG - \tlock initialized - lock = null? -> " + (this.lock == null));
-
         while (this.isConnect) {
-            try{
+            try {
                 int n = -1;
-    
+
                 // get the condition variable
                 this.lock.lock();
-    
+
                 if (this.logged) {
                     n = this.cli.homePage(this.username);
                 } else {
                     n = this.cli.homePage(null);
                 }
-    
+
                 String[] param = null;
                 String city = null;
                 Object[] param2 = null;
@@ -216,7 +208,7 @@ public class HOTELIERCustomerClient {
                         }
                         break;
                     case 6:
-                        try{
+                        try {
                             this.showMyBadges();
                         } catch (Exception e) {
                             System.out.println(e.getMessage());
@@ -354,11 +346,6 @@ public class HOTELIERCustomerClient {
         socketChannel.keyFor(selector).interestOps(0);
     }
 
-
-
-
-
-    
     /**
      * The `NotificationReciever` class is responsible for handling incoming
      * notifications in a separate thread.
@@ -370,9 +357,9 @@ public class HOTELIERCustomerClient {
     protected class NotificationReciever implements Runnable {
         private InetAddress udpAddr;
         private int udpPort;
-        private boolean isRunning = true;
         private Lock lock;
         private MulticastSocket notificator;
+        private Boolean isLogged;
 
         /**
          * Constructs a new NotificationReciever object with the specified UDP address
@@ -381,10 +368,11 @@ public class HOTELIERCustomerClient {
          * @param udpAddr the UDP address to bind the receiver to
          * @param udpPort the UDP port to bind the receiver to
          */
-        public NotificationReciever(InetAddress udpAddr, int udpPort, Lock lock) {
+        public NotificationReciever(InetAddress udpAddr, int udpPort, Lock lock, Boolean isLogged) {
             this.udpAddr = udpAddr;
             this.udpPort = udpPort;
             this.lock = lock;
+            this.isLogged = isLogged;
         }
 
         /**
@@ -398,12 +386,12 @@ public class HOTELIERCustomerClient {
         @SuppressWarnings("deprecation")
         @Override
         public void run() {
+            while (this.isLogged != null && this.isLogged == true) {
+                // wait for the user to log in
+                try {
+                    this.notificator = new MulticastSocket(udpPort);
+                    this.notificator.joinGroup(udpAddr);
 
-            try {
-                this.notificator = new MulticastSocket(udpPort);
-                this.notificator.joinGroup(udpAddr);
-
-                while (isRunning) {
                     byte[] receiveData = new byte[1024];
                     DatagramPacket packet = new DatagramPacket(receiveData, receiveData.length);
 
@@ -413,10 +401,10 @@ public class HOTELIERCustomerClient {
 
                     // take the lock before handling the notification
                     this.lock.lock();
-                    
+
                     // TODO - temp debug print
                     System.out.println("* DEBUG - \tMESSAGGIO UDP RICEVUTO >" + msg + "<");
-                    try{
+                    try {
                         // * Log message *
                         System.out.println("----------------------------\n New top hotel in local ranking:\n" + msg
                                 + "\n----------------------------");
@@ -424,11 +412,12 @@ public class HOTELIERCustomerClient {
                         // release the lock after handling the notification
                         this.lock.unlock();
                     }
+
+                } catch (Exception e) {
+                    // ! Error message !
+                    System.out.println("Error during notification receiving: " + e.getMessage());
+                    // ! Cannot assign requested address: bind
                 }
-            } catch (Exception e) {
-                // ! Error message !
-                System.out.println("Error during notification receiving: " + e.getMessage());
-                // ! Cannot assign requested address: bind
             }
         }
 
@@ -436,10 +425,9 @@ public class HOTELIERCustomerClient {
          * Stops the notification receiver.
          */
         public void stop() {
-            this.isRunning = false;
             if (notificator != null) {
                 notificator.close();
-            
+
             }
         }
     }
@@ -474,7 +462,7 @@ public class HOTELIERCustomerClient {
         req += "SIGNIN_" + this.socketChannel.toString() + "_" + username + "_" + psw;
         // send credentials to the server
         this.write(req);
-        
+
         // recieve response
         String response = this.readAsString();
         if (!this.errors.contains(response)) {
@@ -546,9 +534,6 @@ public class HOTELIERCustomerClient {
      * @param username
      */
     public void logout(String username) {
-
-        // TODO - temp debug print
-        System.out.println("* DEBUG - \tLOGOUT METHOD");
         String req = "LOGOUT_" + this.socketChannel + "_" + this.username;
         String response = "";
 
@@ -732,33 +717,21 @@ public class HOTELIERCustomerClient {
             if (this.logged) {
                 this.logout(this.username);
             }
-            
-            // TODO - temp debug print
-            System.out.println("* DEBUG - \tlogged out");
 
             // close the socket channel if is open
             if (this.socketChannel != null && this.socketChannel.isOpen()) {
                 this.socketChannel.close();
             }
 
-            // TODO - temp debug print
-            System.out.println("* DEBUG - \tsocket close");
-
             // close the selector if is open
             if (this.selector != null && this.selector.isOpen()) {
                 this.selector.close();
             }
 
-            // TODO - temp debug print
-            System.out.println("* DEBUG - \tselector close");
-
             // close the multicast socket if is open
             if (this.notificationReciever != null) {
                 this.notificationReciever.stop();
             }
-
-            // TODO - temp debug print
-            System.out.println("* DEBUG - \tnotification close");
 
             this.isConnect = false;
             // * Log message *

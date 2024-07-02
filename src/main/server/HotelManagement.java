@@ -1,9 +1,6 @@
 package main.server;
 
-// import java.io.File;
-// import java.lang.runtime.TemplateRuntime;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -17,9 +14,20 @@ import main.dataModels.Capitals;
 import main.dataModels.Review;
 
 /**
- * The HotelManagement class represents a hotel management system.
- * It is responsible for loading hotel data, managing hotels, and providing
- * various operations related to hotel management.
+ * The HotelManagement class represents a system for managing hotels and their operations.
+ * It provides functionality for searching hotels, adding reviews, retrieving reviews, and updating hotel rankings.
+ * The class uses a lock to ensure thread safety when accessing and modifying hotel data.
+ * 
+ * The hotel data is stored in a map, where the key is the hotel ID and the value is the Hotel object.
+ * The class also maintains a separate map for storing the best hotels in each city.
+ * 
+ * The HotelManagement class relies on a DataPersistence object to load and save hotel data from a JSON file.
+ * 
+ * To use the HotelManagement class, create an instance by providing the path to the hotel data file.
+ * You can then use the various methods to perform operations on the hotels.
+ * 
+ * Note: This class assumes the existence of other classes such as Hotel, Review, Capitals, and DataPersistence.
+ * Please make sure to import or define these classes before using the HotelManagement class.
  */
 public class HotelManagement {
     /** path of the JSON file with all the hotels */
@@ -239,39 +247,6 @@ public class HotelManagement {
         return current.getReviews();
     }
 
-    // TODO - levare da qua, scrivere nella relazione
-    /**
-     * Per implementare il metodo che aggiorna il rank di ogni hotel nella classe
-     * HotelManagement, possiamo adottare un algoritmo che combina la qualità, la
-     * quantità e l'attualità delle recensioni per ciascun hotel. La qualità può
-     * essere rappresentata dal punteggio medio delle recensioni, la quantità dal
-     * numero di recensioni totali e l'attualità dalla data delle recensioni
-     * (assumendo che ci sia un attributo date nella classe Review).
-     * 
-     * Ecco un esempio di come potrebbe essere implementato questo metodo:
-     * 
-     * Qualità delle recensioni: Calcolare il punteggio medio delle recensioni per
-     * ogni hotel.
-     * Quantità delle recensioni: Considerare il numero totale di recensioni per
-     * ogni hotel.
-     * Attualità delle recensioni: Pesare le recensioni più recenti più fortemente
-     * rispetto a quelle più vecchie.
-     * Per calcolare il rank, possiamo usare una formula che combina questi tre
-     * fattori, ad esempio:
-     * rank = ((media punteggio/5.0)*0.5) + ((numero recensioni/massimo numero
-     * recensioni in città)*0.3)+((peso recensioni recenti/massimo peso recensioni
-     * recenti in città)*0.2)
-     * 
-     * La media del punteggio viene normalizzata a un valore tra 0 e 1 dividendo per
-     * 5.
-     * 
-     * Il numero di recensioni viene normalizzato rispetto al massimo numero di
-     * recensioni per un hotel nella stessa città.
-     * 
-     * Il peso delle recensioni recenti viene normalizzato rispetto al massimo peso
-     * delle recensioni recenti per un hotel nella stessa città.
-     */
-
     /**
      * Retrieves a list of hotels in the specified city, sorted by their ranking
      * score.
@@ -369,9 +344,6 @@ public class HotelManagement {
 
         }
 
-        // TODO - temp debug print
-        System.out.println("* DEBUG - \tEND UPDATE RANKING");
-
         return newBest;
     }
 
@@ -404,7 +376,7 @@ public class HotelManagement {
             // exponent decreasing with time
             recencyScore = Math.exp(-daySinceLastReview / 30.0);
 
-            // total score = combinazione lineare dei tre fattori
+            // total score
             score = globalScore * 0.5 + ratingsScore * 0.3 + recencyScore * 0.2;
 
         }
@@ -438,33 +410,6 @@ public class HotelManagement {
         }
 
         return hotelsByCity;
-    }
-
-    /**
-     * Calculates the recent weight of a hotel based on its reviews.
-     * The recent weight is calculated by assigning a weight to each review based on
-     * its recency.
-     * The weight decreases as the time elapsed since the review increases.
-     * 
-     * @param hotel The hotel for which to calculate the recent weight.
-     * @return The recent weight of the hotel.
-     */
-    private double calculateRecentWeight(Hotel hotel) {
-        double weight = 0.0;
-        long currentTime = System.currentTimeMillis();
-        if (hotel.getReviews() == null) {
-            return weight;
-        }
-        for (Review review : hotel.getReviews()) {
-            long reviewTime = review.getDate().getTime();
-            long timeDifference = currentTime - reviewTime;
-            // the factor decrease when the time elapsed since the review increases
-            // ((1000.0 * 60 * 60 * 24 * 30) converted time from millisecond to months)
-            double recencyFactor = 1.0 / (1.0 + timeDifference / (1000.0 * 60 * 60 * 24 * 30));
-            weight += recencyFactor;
-        }
-
-        return weight;
     }
 
     /**

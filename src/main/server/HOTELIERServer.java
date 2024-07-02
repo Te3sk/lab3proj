@@ -13,17 +13,14 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-// import java.util.Scanner;
 import java.util.Set;
 import java.util.concurrent.Executors;
-// import java.util.Timer;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.concurrent.Executors;
 
 
 import main.dataModels.Hotel;
@@ -31,8 +28,6 @@ import main.dataModels.Hotel;
 public class HOTELIERServer implements Runnable {
     private long timeInterval;
     private Selector selector;
-    private InetAddress tcpAddr;
-    private int tcpPort;
     private InetAddress udpAddr;
     private int udpPort;
     private boolean isRunning;
@@ -43,7 +38,6 @@ public class HOTELIERServer implements Runnable {
     private DataPersistence dataPersistence;
     private Lock lock = new ReentrantLock();
     private ThreadPoolExecutor executor;
-    private ScheduledExecutorService scheduler;
     private NotificationService notificationService;
     private MulticastSocket multicastSocket;
 
@@ -63,8 +57,6 @@ public class HOTELIERServer implements Runnable {
     public HOTELIERServer(InetAddress tcpAddr, InetAddress udpAddr, int tcpPort, long interval, int broadcastPort,
             String hotelFile, String userFile) {
         try { // attributes initialization
-            this.tcpAddr = tcpAddr;
-            this.tcpPort = tcpPort;
             this.udpAddr = udpAddr;
             this.udpPort = broadcastPort;
             this.timeInterval = interval;
@@ -309,7 +301,9 @@ public class HOTELIERServer implements Runnable {
 
                 try{
                     byte[] buffer = msg.getBytes();
-                    DatagramPacket packet = new DatagramPacket(buffer, buffer.length, this.multicastAddr, this.multicastPort);
+                    // TODO - temp debug print
+                    System.out.println("* DEBUG - \tporcoddio byte: " + buffer.length);
+                    DatagramPacket packet = new DatagramPacket(buffer, 1024, this.multicastAddr, this.multicastPort);
                     this.udpSock.send(packet);
                 } catch (IOException e) {
                     System.out.println("Error sending notification: " + e.getMessage());

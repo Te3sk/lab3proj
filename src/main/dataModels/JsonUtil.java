@@ -25,8 +25,6 @@ public class JsonUtil {
     public static <T> void serializeListToFile(List<T> list, String filePath) throws IOException {
         File file = new File(filePath);
         if (!file.exists()) {
-            // TODO - temp debug print
-            System.out.println("* DEBUG - \tdio cane");
             return;
         }
         try (FileWriter writer = new FileWriter(filePath)) {
