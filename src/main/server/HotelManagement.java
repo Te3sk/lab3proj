@@ -154,10 +154,10 @@ public class HotelManagement {
      * add a review for an hotel
      * 
      * @param nomeHotel name of the hotel
-     * @param nomeCittà city of the hotel
+     * @param cityName city of the hotel
      * @param review    the review (obj) you want to add
      */
-    public Map<String, Hotel> addReview(String nomeHotel, String nomeCittà, Review review) throws Exception {
+    public Map<String, Hotel> addReview(String nomeHotel, String cityName, Review review) throws Exception {
         // get the lock
         this.lock.lock();
 
@@ -167,7 +167,7 @@ public class HotelManagement {
 
             // search the hotel
             for (Hotel hotel : this.hotels.values()) {
-                if (nomeHotel.equals(hotel.getName()) && nomeCittà.equals(hotel.getCity())) {
+                if (nomeHotel.equals(hotel.getName()) && cityName.equals(hotel.getCity())) {
                     currentId = hotel.getId();
                     break;
                 }
@@ -212,10 +212,10 @@ public class HotelManagement {
      * get all the reviews of one hotel
      * 
      * @param nomeHotel the name of the hotel
-     * @param nomeCittà the city of the hotel
+     * @param cityName the city of the hotel
      * @return a list of Review obj
      */
-    public List<Review> getReviews(String nomeHotel, String nomeCittà) throws Exception {
+    public List<Review> getReviews(String nomeHotel, String cityName) throws Exception {
         // get the lock
         this.lock.lock();
 
@@ -224,7 +224,7 @@ public class HotelManagement {
 
         // search the hotel
         for (Hotel hotel : this.hotels.values()) {
-            if (nomeHotel.equals(hotel.getName()) && nomeCittà.equals(hotel.getCity())) {
+            if (nomeHotel.equals(hotel.getName()) && cityName.equals(hotel.getCity())) {
                 currentId = hotel.getId();
                 break;
             }
@@ -347,6 +347,11 @@ public class HotelManagement {
         return newBest;
     }
 
+    
+    /** 
+     * @param hotel
+     * @return double
+     */
     public double calculateHotelScore(Hotel hotel) {
         Double score = 0.0;
         Double recencyScore = 0.0;

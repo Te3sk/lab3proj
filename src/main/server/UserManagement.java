@@ -162,6 +162,12 @@ public class UserManagement {
         return this.users;
     }
 
+    
+    /** 
+     * @param username
+     * @return User
+     * @throws Exception
+     */
     public User getUser(String username) throws Exception {
         // get the lock
         this.lock.lock();

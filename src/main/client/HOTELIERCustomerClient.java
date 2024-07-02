@@ -565,10 +565,10 @@ public class HOTELIERCustomerClient {
      * search an hotel by name and city
      * 
      * @param nomeHotel
-     * @param città
+     * @param city
      */
-    public void searchHotel(String nomeHotel, String città) throws Exception {
-        String req = "HOTEL_" + this.socketChannel + "_" + this.username + "_" + nomeHotel + "_" + città;
+    public void searchHotel(String nomeHotel, String city) throws Exception {
+        String req = "HOTEL_" + this.socketChannel + "_" + this.username + "_" + nomeHotel + "_" + city;
 
         this.write(req);
 
@@ -605,10 +605,10 @@ public class HOTELIERCustomerClient {
     /**
      * search all the hotel in a city, ordered by ranking
      * 
-     * @param città
+     * @param city
      */
-    public void searchAllHotels(String città) throws Exception {
-        String req = "ALLHOTEL_" + this.socketChannel + "_" + this.username + "_" + città;
+    public void searchAllHotels(String city) throws Exception {
+        String req = "ALLHOTEL_" + this.socketChannel + "_" + this.username + "_" + city;
 
         this.write(req);
 
@@ -642,13 +642,13 @@ public class HOTELIERCustomerClient {
      * insert a review for an hotel
      * 
      * @param hotel        name of the hotel
-     * @param città        name of the city where the hotel is
+     * @param city        name of the city where the hotel is
      * @param GlobalScore
      * @param singleScores
      */
-    public void insertReview(String hotel, String città, Review review)
+    public void insertReview(String hotel, String city, Review review)
             throws Exception {
-        String req = "REVIEW_" + this.socketChannel + "_" + this.username + "_" + hotel + "_" + città + "_"
+        String req = "REVIEW_" + this.socketChannel + "_" + this.username + "_" + hotel + "_" + city + "_"
                 + review.toString();
 
         this.write(req);

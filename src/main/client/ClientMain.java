@@ -15,6 +15,10 @@ import java.nio.file.Paths;
 import java.util.Properties;
 
 public class ClientMain {
+    
+    /** 
+     * @param args
+     */
     public static void main(String[] args) {
         // take args (from a config file)
         try (InputStream input = Files.newInputStream(Paths.get("config/clientConfig.properties"))) {

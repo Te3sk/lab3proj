@@ -107,6 +107,10 @@ public class HOTELIERServer implements Runnable {
         return null;
     }
 
+    
+    /** 
+     * @param handler
+     */
     public void removeHandler(RequestHandler handler) {
         this.requestHandlers.remove(handler);
     }

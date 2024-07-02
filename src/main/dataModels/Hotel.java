@@ -16,6 +16,11 @@ public class Hotel {
     private double rate;
     private Map<String, Integer> ratings;
 
+    
+    /** 
+     * @param interval
+     * @return double
+     */
     public double computeScore (double interval) {
         if (this.reviews == null) {
             this.reviews = new ArrayList<Review>();
@@ -37,6 +42,10 @@ public class Hotel {
         return score;
     }
 
+    
+    /** 
+     * @return String
+     */
     @Override
     public String toString() {
         String string = "";

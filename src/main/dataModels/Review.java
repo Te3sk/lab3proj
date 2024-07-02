@@ -99,6 +99,9 @@ public class Review {
         this.date = date;
     }
 
+    /** 
+     * @return String
+     */
     @Override
     public String toString() {
         String res = new String();
@@ -109,7 +112,13 @@ public class Review {
 
         return res;
     }
-
+    
+    /** 
+     * @param str
+     * @return Review
+     * @throws Exception
+     * @throws ParseException
+     */
     public static Review fromString(String str) throws Exception, ParseException {
         Double rate = 0.0;
         Map<String, Integer> ratings = new HashMap<>();
